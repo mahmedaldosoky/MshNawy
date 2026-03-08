@@ -100,3 +100,8 @@ angular/playwright-report/
 angular/blob-report/
 angular/e2e/screenshots/
 angular/e2e/videos/
+
+# ============================================================
+.git
+.claude
+.vscode
