@@ -102,6 +102,7 @@ angular/e2e/screenshots/
 angular/e2e/videos/
 
 # ============================================================
-.git
+.github
 .claude
 .vscode
+.specify
