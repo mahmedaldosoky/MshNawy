@@ -1,0 +1,16 @@
+<div class="ri-confirmation-dialog">
+  <h2 mat-dialog-title>{{ title }}</h2>
+  <mat-dialog-content>
+    <p>{{ message }}</p>
+    <p *ngIf="isDangerous" class="warning-text">
+      <mat-icon>warning</mat-icon>
+      هذا الإجراء لا يمكن التراجع عنه
+    </p>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">{{ cancelLabel }}</button>
+    <button mat-raised-button [color]="confirmColor" (click)="onConfirm()">
+      {{ confirmLabel }}
+    </button>
+  </mat-dialog-actions>
+</div>

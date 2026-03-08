@@ -1,0 +1,17 @@
+<div class="ri-error-state">
+  <div class="error-state-content">
+    <mat-icon class="error-state-icon">error_outline</mat-icon>
+    <h3 class="error-state-title">{{ errorMessage }}</h3>
+    <p class="error-state-code">{{ errorCode }}</p>
+    <p class="error-state-details" *ngIf="details">{{ details }}</p>
+    <button
+      *ngIf="showRetry"
+      mat-raised-button
+      color="primary"
+      class="error-state-retry"
+      (click)="onRetry()"
+    >
+      {{ retryLabel }}
+    </button>
+  </div>
+</div>

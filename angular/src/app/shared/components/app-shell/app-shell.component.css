@@ -1,0 +1,18 @@
+.ri-app-shell{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0.5rem 1rem;
+  background:#ffffff;
+  border-bottom:1px solid #e6e6e6;
+  direction:rtl;
+}
+.ri-brand{font-weight:700}
+.ri-nav{list-style:none;display:flex;gap:1rem;margin:0;padding:0}
+.ri-nav a{text-decoration:none;color:#222}
+.ri-actions a{margin-left:0.75rem;text-decoration:none}
+.ri-main{padding:1rem}
+
+@media (max-width:768px){
+  .ri-nav{display:none}
+}

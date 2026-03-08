@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash:*)",
+      "WebSearch",
+      "WebFetch(domain:www.dailynewsegypt.com)",
+      "WebFetch(domain:help.getstake.com)",
+      "WebFetch(domain:www.mymoneyblog.com)",
+      "Bash(abp:*)",
+      "Bash(dotnet tool:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+<div class="ri-empty-state">
+  <div class="empty-state-content">
+    <mat-icon class="empty-state-icon">{{ icon }}</mat-icon>
+    <h3 class="empty-state-title">{{ title }}</h3>
+    <p class="empty-state-description" *ngIf="description">{{ description }}</p>
+    <button
+      *ngIf="actionLabel"
+      mat-raised-button
+      color="primary"
+      class="empty-state-action"
+      (click)="onActionClick()"
+    >
+      {{ actionLabel }}
+    </button>
+  </div>
+</div>

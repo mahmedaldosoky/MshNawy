@@ -1,0 +1,8 @@
+{
+  "Localization": {
+    "ErrorCodes": {
+      "DEFAULT_ERROR": "خطأ غير متوقع",
+      "INVALID_INPUT": "إدخال غير صالح"
+    }
+  }
+}
