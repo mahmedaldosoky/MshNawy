@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace MshNawy.Domain.Fees
 {
-    public class FeeCalculator
+    public class FeeCalculator : IFeeCalculator
     {
         /// <summary>
         /// Calculates entry fee using integer arithmetic (no floating-point) per Constitution II.

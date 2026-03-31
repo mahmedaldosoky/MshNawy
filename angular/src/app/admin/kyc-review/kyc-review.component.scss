@@ -1,0 +1,75 @@
+.kyc-admin {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+select {
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #cfd5dc;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 8px 20px rgba(24, 40, 61, 0.08);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.primary,
+.ghost,
+.warn {
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primary {
+  background: #2f5875;
+  color: #fff;
+}
+
+.warn {
+  background: #c9452c;
+  color: #fff;
+}
+
+.ghost {
+  background: #f0f4f8;
+  color: #2f5875;
+}
+
+.loading {
+  color: #2f5875;
+}
+
+.error {
+  color: #b42318;
+}

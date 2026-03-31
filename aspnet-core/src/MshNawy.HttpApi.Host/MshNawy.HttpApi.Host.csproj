@@ -19,9 +19,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared" Version="9.0.0" />
+    <PackageReference Include="Volo.Abp.Swashbuckle" Version="9.0.0" />
     <PackageReference Include="Volo.Abp.Autofac" Version="9.0.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
+    <PackageReference Include="Volo.Abp.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
   </ItemGroup>
 
 </Project>

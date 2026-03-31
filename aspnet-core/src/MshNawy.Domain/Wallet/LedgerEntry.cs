@@ -1,4 +1,5 @@
 using System;
+using Volo.Abp.Domain.Entities;
 
 namespace MshNawy.Domain.Wallet
 {
@@ -6,9 +7,8 @@ namespace MshNawy.Domain.Wallet
     /// Immutable ledger entry - record of a single monetary movement.
     /// Per Constitution II: All monetary movements recorded via double-entry (debit/credit pair).
     /// </summary>
-    public class LedgerEntry
+    public class LedgerEntry : Entity<Guid>
     {
-        public Guid Id { get; private set; }
         public DateTime Timestamp { get; private set; }
         public MshNawy.Domain.Shared.LedgerEntryType EntryType { get; private set; }
         public string? DebitAccount { get; private set; }

@@ -27,6 +27,8 @@ try
 
     await app.InitializeApplicationAsync();
 
+    app.MapGet("/", () => Results.Redirect("/swagger"));
+
     Log.Information("MshNawy API Host started successfully.");
     await app.RunAsync();
 }

@@ -1,12 +1,22 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using Volo.Abp;
 using Volo.Abp.Autofac;
 using Volo.Abp.Modularity;
+using Volo.Abp.AspNetCore.Authentication.JwtBearer;
+using Volo.Abp.Swashbuckle;
 using MshNawy.Application;
 using MshNawy.EntityFrameworkCore;
 using MshNawy.HttpApi;
+using MshNawy.Domain.Shared;
+using MshNawy.Application.Identity;
+using Microsoft.OpenApi.Models;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace MshNawy.HttpApi.Host
 {
@@ -19,7 +29,9 @@ namespace MshNawy.HttpApi.Host
         typeof(AbpAutofacModule),
         typeof(MshNawyApplicationModule),
         typeof(MshNawyEntityFrameworkCoreModule),
-        typeof(MshNawyHttpApiModule)
+        typeof(MshNawyHttpApiModule),
+        typeof(AbpAspNetCoreAuthenticationJwtBearerModule),
+        typeof(AbpSwashbuckleModule)
     )]
     public class MshNawyHttpApiHostModule : AbpModule
     {
@@ -29,8 +41,77 @@ namespace MshNawy.HttpApi.Host
 
             var configuration = context.Services.GetConfiguration();
 
+            context.Services.Configure<FileStorageOptions>(
+                configuration.GetSection("FileStorage")
+            );
+
+            context.Services.Configure<JwtOptions>(
+                configuration.GetSection("Jwt")
+            );
+
+            var jwtOptions = configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+            context.Services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidIssuer = jwtOptions.Issuer,
+                        ValidAudience = jwtOptions.Audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromMinutes(1)
+                    };
+                });
+
             // Add controllers
             context.Services.AddControllers();
+
+            // Configure Swagger
+            context.Services.AddAbpSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "MshNawy API",
+                    Version = "v1"
+                });
+                options.DocInclusionPredicate((_, apiDesc) =>
+                {
+                    var path = apiDesc.RelativePath ?? string.Empty;
+                    // Hide unused ABP framework endpoints from Swagger
+                    if (path.StartsWith("api/abp/", StringComparison.OrdinalIgnoreCase))
+                        return false;
+                    return true;
+                });
+
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    In = ParameterLocation.Header,
+                    Description = "Enter your JWT token"
+                });
+
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new List<string>()
+                    }
+                });
+            });
 
             // Configure CORS for Angular frontend
             context.Services.AddCors(options =>
@@ -72,7 +153,17 @@ namespace MshNawy.HttpApi.Host
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // Idempotency middleware for financial endpoints (Constitution §III)
+            app.UseMiddleware<IdempotencyMiddleware>();
+
             app.UseAuditing();
+
+            app.UseSwagger();
+            app.UseAbpSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "MshNawy API");
+                options.RoutePrefix = "swagger";
+            });
 
             app.UseConfiguredEndpoints();
         }

@@ -1,20 +1,26 @@
+using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+using Volo.Abp.AutoMapper;
 using Volo.Abp.Modularity;
 using MshNawy.Domain;
+using MshNawy.Application.Identity;
 
 namespace MshNawy.Application
 {
-    /// <summary>
-    /// MshNawy Application Module - registers application services, DTOs, and mapping profiles.
-    /// Per Constitution VII: Application layer services coordinate domain logic and persistence.
-    /// </summary>
     [DependsOn(typeof(MshNawyDomainModule))]
     public class MshNawyApplicationModule : AbpModule
     {
         public override void ConfigureServices(ServiceConfigurationContext context)
         {
-            // Application services will be registered here as needed for each user story
-            // Example: context.Services.AddScoped<IWalletAppService, WalletAppService>();
-            // AutoMapper profile registration will be added in Phase 3+
+            Configure<AbpAutoMapperOptions>(options =>
+            {
+                options.AddMaps<MshNawyApplicationModule>();
+            });
+
+            context.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(MshNawyApplicationModule).Assembly));
+            context.Services.AddValidatorsFromAssembly(typeof(MshNawyApplicationModule).Assembly);
+            context.Services.AddTransient<IOtpSender, MockOtpSender>();
+            context.Services.AddTransient<IJwtTokenService, JwtTokenService>();
         }
     }
 }

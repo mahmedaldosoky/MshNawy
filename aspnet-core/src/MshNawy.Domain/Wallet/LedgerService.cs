@@ -10,7 +10,7 @@ namespace MshNawy.Domain.Wallet
     /// All monetary movements MUST be recorded via debit/credit pairs.
     /// Posted entries are immutable; corrections use compensating entries only.
     /// </summary>
-    public class LedgerService
+    public class LedgerService : ILedgerService
     {
         private readonly List<LedgerEntry> _entries = new(); // Simulated persistence until ABP repo is available
 

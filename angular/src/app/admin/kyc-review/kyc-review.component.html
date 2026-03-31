@@ -1,0 +1,30 @@
+<section class="kyc-admin">
+  <header>
+    <h1>مراجعة طلبات التحقق</h1>
+    <div class="controls">
+      <label>الحالة</label>
+      <select [(ngModel)]="status" (change)="load()">
+        <option *ngFor="let option of statusOptions" [value]="option">{{ option }}</option>
+      </select>
+    </div>
+  </header>
+
+  <div *ngIf="isLoading" class="loading">جارٍ التحميل...</div>
+  <div *ngIf="errorMessage" class="error">{{ errorMessage }}</div>
+
+  <div class="card" *ngFor="let item of items">
+    <div class="info">
+      <h3>{{ item.fullNameArabic || 'بدون اسم' }}</h3>
+      <p>الهاتف: {{ item.phoneNumber }}</p>
+      <p>الحالة: {{ item.status }}</p>
+      <p *ngIf="item.submittedAt">تاريخ الإرسال: {{ item.submittedAt | date: 'mediumDate' }}</p>
+      <p *ngIf="item.rejectionReason">سبب الرفض: {{ item.rejectionReason }}</p>
+    </div>
+    <div class="actions">
+      <button class="ghost" (click)="moveToUnderReview(item.userId)">قيد المراجعة</button>
+      <button class="primary" (click)="approve(item.userId)">قبول</button>
+      <button class="warn" (click)="reject(item.userId)">رفض</button>
+      <button class="ghost" (click)="requestResubmission(item.userId)">إعادة إرسال</button>
+    </div>
+  </div>
+</section>

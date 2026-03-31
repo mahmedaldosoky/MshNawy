@@ -1,3 +1,4 @@
+using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.Modularity;
 
 namespace MshNawy.HttpApi
@@ -6,6 +7,7 @@ namespace MshNawy.HttpApi
     /// MshNawy HttpApi Module - registers API controllers and HTTP-specific configurations.
     /// Per Constitution VII: HTTP/REST layer built on top of application services.
     /// </summary>
+    [DependsOn(typeof(AbpAspNetCoreMvcModule))]
     public class MshNawyHttpApiModule : AbpModule
     {
         public override void ConfigureServices(ServiceConfigurationContext context)

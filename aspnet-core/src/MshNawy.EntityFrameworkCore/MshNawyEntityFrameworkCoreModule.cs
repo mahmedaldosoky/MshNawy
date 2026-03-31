@@ -2,7 +2,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.SqlServer;
 using Volo.Abp.Modularity;
+using Volo.Abp.Identity.EntityFrameworkCore;
+using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using MshNawy.Domain;
+using MshNawy.Domain.Shared;
+using MshNawy.Domain.Identity;
+using MshNawy.EntityFrameworkCore.Infrastructure.FileStorage;
+using MshNawy.EntityFrameworkCore.Repositories;
 
 namespace MshNawy.EntityFrameworkCore
 {
@@ -13,7 +19,9 @@ namespace MshNawy.EntityFrameworkCore
     /// </summary>
     [DependsOn(
         typeof(MshNawyDomainModule),
-        typeof(AbpEntityFrameworkCoreSqlServerModule)
+        typeof(AbpEntityFrameworkCoreSqlServerModule),
+        typeof(AbpIdentityEntityFrameworkCoreModule),
+        typeof(AbpPermissionManagementEntityFrameworkCoreModule)
     )]
     public class MshNawyEntityFrameworkCoreModule : AbpModule
     {
@@ -22,7 +30,10 @@ namespace MshNawy.EntityFrameworkCore
             context.Services.AddAbpDbContext<MshNawyDbContext>(options =>
             {
                 options.AddDefaultRepositories(includeAllEntities: true);
+                options.AddRepository<AppUser, EfCoreAppUserRepository>();
             });
+
+            context.Services.AddTransient<IFileStorageService, LocalFileStorageService>();
 
             Configure<AbpDbContextOptions>(options =>
             {

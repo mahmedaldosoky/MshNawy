@@ -1,4 +1,4 @@
-.ri-error-state {
+.msn-error-state {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -52,7 +52,7 @@
 
 /* Mobile responsive */
 @media (max-width: 600px) {
-  .ri-error-state {
+  .msn-error-state {
     min-height: 250px;
     padding: 1.5rem;
   }

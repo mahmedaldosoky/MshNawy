@@ -19,16 +19,16 @@
 
 **Purpose**: Rename existing scaffold from "RealInvest" to "MshNawy" across all code files
 
-- [ ] T000 Rename ABP solution from RealInvest to MshNawy:
-  1. Rename `aspnet-core/RealInvest.sln` → `aspnet-core/MshNawy.sln`
-  2. Rename all `.csproj` files: `RealInvest.*.csproj` → `MshNawy.*.csproj`
-  3. Replace all `namespace RealInvest.` → `namespace MshNawy.` across all `.cs` files
-  4. Replace all `using RealInvest.` → `using MshNawy.` across all `.cs` files
-  5. Replace `[DependsOn(typeof(RealInvest` → `[DependsOn(typeof(MshNawy` in module classes
-  6. Replace `Database=RealInvest` → `Database=MshNawy` in appsettings.json
-  7. Replace `"name": "realinvest"` → `"name": "mshn-nawy"` in angular/package.json
-  8. Replace `RealInvest:` → `MshNawy:` error code prefix in ar.json and all source files
-  9. Run `dotnet build aspnet-core/` and `ng build` to verify zero errors after rename
+- [X] T000 Rename ABP solution from RealInvest to MshNawy:
+  1. ~~Rename `aspnet-core/RealInvest.sln` → `aspnet-core/MshNawy.sln`~~ ✅
+  2. ~~Rename all `.csproj` files: `RealInvest.*.csproj` → `MshNawy.*.csproj`~~ ✅
+  3. ~~Replace all `namespace RealInvest.` → `namespace MshNawy.` across all `.cs` files~~ ✅
+  4. ~~Replace all `using RealInvest.` → `using MshNawy.` across all `.cs` files~~ ✅
+  5. ~~Replace `[DependsOn(typeof(RealInvest` → `[DependsOn(typeof(MshNawy` in module classes~~ ✅
+  6. ~~Replace `Database=RealInvest` → `Database=MshNawy` in appsettings.json~~ ✅
+  7. ~~Replace `"name": "realinvest"` → `"name": "mshn-nawy"` in angular/package.json~~ ✅
+  8. ~~Replace `RealInvest:` → `MshNawy:` error code prefix in ar.json and all source files~~ ✅ (source code uses MshNawy:NNNN format; api-contracts.md updated separately)
+  9. ~~Run `dotnet build aspnet-core/` and `ng build` to verify zero errors after rename~~ ✅
 
 ---
 
@@ -39,7 +39,7 @@
 - [X] T001 Scaffold ABP solution using `abp new MshNawy -t app -u angular --database-provider ef -dbms SqlServer --mobile none` in aspnet-core/
  - [X] T002 Verify ABP scaffold builds: `dotnet build` in aspnet-core/ and `npm install && ng build` in angular/
  - [X] T003 [P] Configure Angular for Arabic RTL: set `dir="rtl"` on root html element, add `ar-EG` locale registration, configure CSS logical properties lint rule in angular/.eslintrc.json
- - [X] T004 [P] Configure ABP localization: create `ar.json` resource file in aspnet-core/src/MshNawy.Domain.Shared/Localization/RealInvest/ar.json with initial error codes from contracts/api-contracts.md
+ - [X] T004 [P] Configure ABP localization: create `ar.json` resource file in aspnet-core/src/MshNawy.Domain.Shared/Localization/MshNawy/ar.json with all error codes from MshNawyErrorCodes.cs
  - [X] T005 [P] Install and configure MSW in angular/: `npm install msw --save-dev`, create angular/src/app/mock/browser.ts with service worker setup, add mock toggle to angular/src/environments/environment.ts
  - [X] T006 [P] Install and configure Storybook for Angular: `npx storybook@latest init`, configure for RTL Arabic preview in angular/.storybook/preview.ts
  - [X] T007 [P] Configure FluentValidation in aspnet-core/src/MshNawy.Application/ and register validators in module class
@@ -59,14 +59,14 @@
 ### Domain Foundation
 
 - [X] T010 Create all shared enums in aspnet-core/src/MshNawy.Domain.Shared/: KycStatus, DepositMethod, DepositStatus, WithdrawalMethod, WithdrawalStatus, RiskLevel, OfferingStatus, OrderStatus, InstallmentStatus, ExitStatus, TicketCategory, TicketStatus, LedgerEntryType, NotificationEventType
-- [X] T011 Create RealInvest error codes constants class in aspnet-core/src/MshNawy.Domain.Shared/MshNawyErrorCodes.cs matching all error codes from contracts/api-contracts.md
+- [X] T011 Create MshNawy error codes constants class in aspnet-core/src/MshNawy.Domain.Shared/MshNawyErrorCodes.cs matching all error codes from contracts/api-contracts.md
 - [X] T012 Implement LedgerEntry entity (immutable, no public setters) in aspnet-core/src/MshNawy.Domain/Wallet/LedgerEntry.cs per data-model.md
 - [X] T013 Implement LedgerService domain service in aspnet-core/src/MshNawy.Domain/Wallet/LedgerService.cs: PostEntry (creates debit+credit pair), PostCompensatingEntry (references original), ValidateBalance (sum check)
 - [X] T014 Implement BalanceCalculator domain service in aspnet-core/src/MshNawy.Domain/Wallet/BalanceCalculator.cs: derives Available, Reserved, Invested, PendingWithdrawal from ledger entries for a user
 - [X] T015 Implement FeePolicy aggregate root in aspnet-core/src/MshNawy.Domain/Fees/FeePolicy.cs per data-model.md with effective-date validation
 - [X] T016 Implement FeeCalculator domain service in aspnet-core/src/MshNawy.Domain/Fees/FeeCalculator.cs: CalculateEntryFee, CalculatePaymentFee, CalculateExitFee (brokerage + platform split), CalculateWithdrawalFee
 - [X] T017 Configure EF Core DbContext: register LedgerEntry and FeePolicy entity mappings in aspnet-core/src/MshNawy.EntityFrameworkCore/MshNawyDbContext.cs, add unique index on LedgerEntry.IdempotencyKey
-- [ ] T018 Create initial database migration with `dotnet ef migrations add InitialLedgerAndFees` in aspnet-core/src/MshNawy.EntityFrameworkCore/
+- [X] T018 Create initial database migration in aspnet-core/src/MshNawy.EntityFrameworkCore/ (migrations exist: 20260228_InitialLedgerAndFees + 20260308203948_FeesPoliciesTable)
 
 ### Tests — Foundational
 
@@ -94,42 +94,98 @@
 
 ### Contracts & Mocks — US1
 
-- [ ] T027 [P] [US1] Create auth DTOs (SendOtpInput, VerifyOtpInput, AuthResult) and KYC DTOs (KycStatusDto, KycSubmitInput) in aspnet-core/src/MshNawy.Application.Contracts/Identity/
-- [ ] T028 [P] [US1] Create TypeScript interfaces for auth and KYC matching DTOs in angular/src/app/shared/models/identity.models.ts
-- [ ] T029 [US1] Create MSW handlers for POST /auth/send-otp, POST /auth/verify-otp, GET /kyc/status, POST /kyc/submit in angular/src/app/mock/handlers/identity.handlers.ts with mock OTP acceptance (any 6 digits)
+- [X] T027 [P] [US1] Create auth DTOs (SendOtpInput, VerifyOtpInput, AuthResult) and KYC DTOs (KycStatusDto, KycSubmitInput) in aspnet-core/src/MshNawy.Application.Contracts/Identity/
+- [X] T028 [P] [US1] Create TypeScript interfaces for auth and KYC matching DTOs in angular/src/app/shared/models/identity.models.ts
+- [X] T029 [US1] Create MSW handlers for POST /auth/send-otp, POST /auth/verify-otp, GET /kyc/status, POST /kyc/upload, POST /kyc/submit, GET /kyc/image/{token} in angular/src/app/mock/handlers/identity.handlers.ts — mock OTP accepts any 6 digits, returns hardcoded mock JWT (`mock-jwt-token`), deterministic userId from seed data, and mock KYC status. Mock upload handler returns deterministic file tokens.
 
 ### Angular Frontend — US1
 
-- [ ] T030 [US1] Build OTP login screen: phone number input (+20 format validation), OTP entry (6-digit), countdown timer, error states — all Arabic RTL in angular/src/app/onboarding/login/
-- [ ] T031 [US1] Build KYC submission flow: multi-step form (name, DOB, national ID 14-digit, front/back photo upload, selfie upload) with validation in angular/src/app/onboarding/kyc/
-- [ ] T032 [US1] Build KYC status display component: shows current status (Draft/Submitted/Approved/Rejected with reason/NeedsResubmission), resubmission option in angular/src/app/onboarding/kyc-status/
-- [ ] T033 [P] [US1] Create Storybook stories for OTP login and KYC components: default, error, loading, OTP locked, KYC rejected states in angular/src/app/onboarding/*.stories.ts
+- [X] T030 [US1] Build OTP login screen: phone number input (auto-prepend +20, user enters 10 digits), OTP entry (6-digit), countdown timer (3 min), error states — all Arabic RTL in angular/src/app/onboarding/login/
+- [X] T031 [US1] Build KYC submission flow: multi-step form (name, DOB, national ID 14-digit, front/back photo upload via POST /kyc/upload, selfie upload via POST /kyc/upload) then submit with file tokens via POST /kyc/submit — with validation in angular/src/app/onboarding/kyc/
+- [X] T032 [US1] Build KYC status display component: shows current status (Draft/Submitted/Approved/Rejected with reason/NeedsResubmission), resubmission option in angular/src/app/onboarding/kyc-status/
+- [X] T033 [P] [US1] Create Storybook stories for OTP login and KYC components: default, error, loading, OTP locked, KYC rejected states in angular/src/app/onboarding/*.stories.ts
+
+### File Storage Infrastructure — US1 (prerequisite for KYC upload)
+
+- [X] T168 [US1] Implement IFileStorageService abstraction in aspnet-core/src/MshNawy.Domain/Shared/IFileStorageService.cs with methods: `StoreFileAsync`, `GetFileStreamAsync`, `DeleteFileAsync`. Implement LocalFileStorageService in aspnet-core/src/MshNawy.EntityFrameworkCore/Infrastructure/FileStorage/LocalFileStorageService.cs — stores files outside wwwroot, served only via authenticated API endpoint (no public URL — constitution §Security MUST). Register in DI.
+- [X] T168b [US1] Implement KYC image upload/retrieval API: `POST /api/app/kyc/upload` (stores file via IFileStorageService, returns opaque fileToken), `GET /api/app/kyc/image/{fileToken}` (validates JWT + file ownership, streams file) in aspnet-core/src/MshNawy.HttpApi/Identity/KycImageController.cs — ensures no KYC image is publicly accessible
 
 ### Backend Domain — US1
 
-- [ ] T034 [US1] Extend ABP IdentityUser with KYC fields (KycStatus, NationalIdNumber, image paths, OTP fields) via AppUser entity in aspnet-core/src/MshNawy.Domain/Identity/AppUser.cs
-- [ ] T035 [US1] Implement OtpService domain service in aspnet-core/src/MshNawy.Domain/Identity/OtpService.cs: GenerateOtp, VerifyOtp, CheckRateLimit (5 per 15 min, 30 min lockout)
-- [ ] T036 [US1] Implement KYC state machine with guarded transitions in AppUser domain methods: `SubmitKyc` (Draft→Submitted), `MoveToUnderReview` (Submitted→UnderReview, called by admin), `ApproveKyc` (UnderReview→Approved), `RejectKyc` (UnderReview→Rejected with reason), `RequestResubmission` (UnderReview→NeedsResubmission), `Resubmit` (Rejected/NeedsResubmission→Submitted) in aspnet-core/src/MshNawy.Domain/Identity/AppUser.cs — all six transitions must be guarded (invalid transition throws BusinessException)
+- [X] T034 [US1] Create AppUser entity as a separate aggregate root in aspnet-core/src/MshNawy.Domain/Identity/AppUser.cs — references ABP IdentityUser.Id via FK (composition, not inheritance). Fields from data-model.md: KycStatus, KycRejectionReason, FullNameArabic, DateOfBirth, NationalIdNumber, NationalIdFrontImagePath, NationalIdBackImagePath, SelfiePath, OtpCode (hashed), OtpExpiresAt, OtpAttemptCount, OtpWindowStart, OtpLockedUntil. All KYC and OTP fields on this entity.
+- [X] T035 [US1] Implement OtpService domain service in aspnet-core/src/MshNawy.Domain/Identity/OtpService.cs: GenerateOtp (returns plain OTP, stores SHA256 hash + expiration on AppUser), VerifyOtp (compares hash, checks expiration within 3 min), CheckRateLimit (5 attempts per 15-min window tracked via OtpAttemptCount/OtpWindowStart, 30 min lockout via OtpLockedUntil). OTP code stored as SHA256 hash on AppUser entity — never stored in plaintext.
+- [X] T036 [US1] Implement KYC state machine with guarded transitions in AppUser domain methods: `SubmitKyc` (Draft→Submitted), `MoveToUnderReview` (Submitted→UnderReview, called by admin), `ApproveKyc` (UnderReview→Approved), `RejectKyc` (UnderReview→Rejected with reason), `RequestResubmission` (UnderReview→NeedsResubmission), `Resubmit` (Rejected/NeedsResubmission→Submitted) in aspnet-core/src/MshNawy.Domain/Identity/AppUser.cs — all six transitions must be guarded (invalid transition throws BusinessException)
 
 ### Backend Application & API — US1
 
-- [ ] T037 [US1] Implement AuthAppService in aspnet-core/src/MshNawy.Application/Identity/AuthAppService.cs: SendOtp, VerifyOtp endpoints with token generation
-- [ ] T038 [US1] Implement KycAppService in aspnet-core/src/MshNawy.Application/Identity/KycAppService.cs: GetStatus, Submit (with file upload handling via IFileStorageService)
-- [ ] T039 [US1] Create API controllers for auth and KYC in aspnet-core/src/MshNawy.HttpApi/Identity/AuthController.cs and KycController.cs
-- [ ] T040 [US1] EF Core migration for AppUser extension fields: `dotnet ef migrations add AddKycFields`
+- [X] T037 [US1] Implement AuthAppService in aspnet-core/src/MshNawy.Application/Identity/AuthAppService.cs: SendOtp (finds or creates ABP IdentityUser by phone, creates AppUser if needed, calls OtpService.GenerateOtp, delegates SMS to IOtpSender interface — mock impl for MVP), VerifyOtp (validates via OtpService, then generates JWT using ABP's ITokenService/SignInManager, returns accessToken + userId + kycStatus)
+- [X] T038 [US1] Implement KycAppService in aspnet-core/src/MshNawy.Application/Identity/KycAppService.cs: GetStatus, Upload (stores file via IFileStorageService, returns opaque token), Submit (accepts file tokens + form data, calls AppUser.SubmitKyc)
+- [X] T039 [US1] Create API controllers for auth and KYC in aspnet-core/src/MshNawy.HttpApi/Identity/AuthController.cs and KycController.cs
+- [X] T040 [US1] EF Core migration for AppUser extension fields: `dotnet ef migrations add AddKycFields` ✅ (migration 20260309200923_AddKYC exists)
 
 ### Tests — US1
 
-- [ ] T041 [P] [US1] Unit tests for OtpService: rate limiting, lockout, expiration, valid/invalid OTP in aspnet-core/test/MshNawy.Domain.Tests/Identity/OtpServiceTests.cs
-- [ ] T042 [P] [US1] Unit tests for KYC state machine: all valid transitions, invalid transition rejection in aspnet-core/test/MshNawy.Domain.Tests/Identity/KycStateMachineTests.cs
+- [X] T041 [P] [US1] Unit tests for OtpService: rate limiting, lockout, expiration, valid/invalid OTP in aspnet-core/test/MshNawy.Domain.Tests/Identity/OtpServiceTests.cs
+- [X] T042 [P] [US1] Unit tests for KYC state machine: all valid transitions, invalid transition rejection in aspnet-core/test/MshNawy.Domain.Tests/Identity/KycStateMachineTests.cs
 
 ### Admin — US1
 
-- [ ] T043 [US1] Create admin KYC review DTOs in aspnet-core/src/MshNawy.Application.Contracts/Identity/Admin/
-- [ ] T044 [US1] Implement admin KycReviewAppService (list submitted/under-review, view documents, MoveToUnderReview, approve/reject with reason, request resubmission) in aspnet-core/src/MshNawy.Application/Identity/Admin/KycReviewAppService.cs
-- [ ] T045 [US1] Build admin KYC review screen: list pending KYC submissions, view documents, approve/reject with reason in angular/src/app/admin/kyc-review/
+- [X] T043 [US1] Create admin KYC review DTOs in aspnet-core/src/MshNawy.Application.Contracts/Identity/Admin/
+- [X] T044 [US1] Implement admin KycReviewAppService (list submitted/under-review, view documents, MoveToUnderReview, approve/reject with reason, request resubmission) in aspnet-core/src/MshNawy.Application/Identity/Admin/KycReviewAppService.cs
+- [X] T045 [US1] Build admin KYC review screen: list pending KYC submissions, view documents, approve/reject with reason in angular/src/app/admin/kyc-review/
 
 **Checkpoint**: User Story 1 complete. Users can register via OTP, submit KYC, admin can review. KYC guard blocks unapproved users from financial features.
+
+---
+
+## Phase 3b: Post-Implementation Remediation (Blocking — must complete before Phase 4)
+
+**Purpose**: Fix constitution violations, rename remnants, and missing infrastructure identified in post-Phase 3 analysis (2026-03-13)
+
+### Constitution §I — Localization Violations
+
+- [X] T184 [P] Replace all hardcoded Arabic strings with ABP localization service calls across Angular components:
+  1. `angular/src/app/onboarding/login/onboarding-login.component.ts` — move error messages to localization keys
+  2. `angular/src/app/onboarding/kyc/onboarding-kyc.component.ts` — move error messages to localization keys
+  3. `angular/src/app/onboarding/kyc-status/kyc-status.component.ts` — move error messages to localization keys
+  4. `angular/src/app/shared/components/error-state/error-state.component.ts` — replace default `@Input()` Arabic string with localization key
+  5. Add all new localization keys to `aspnet-core/src/MshNawy.Domain.Shared/Localization/MshNawy/ar.json`
+  6. Use ABP localization pipe (`abpLocalization` or `LocalizationService`) — no hardcoded strings in `.ts` files
+
+### Rename Completion
+
+- [X] T185 [P] Complete RealInvest → MshNawy rename in Angular UI:
+  1. `angular/src/index.html` line 5: change `<title>RealInvest</title>` → `<title>MshNawy</title>`
+  2. `angular/src/app/shared/components/app-shell/app-shell.component.html`: replace `RealInvest` brand text with localized app name
+  3. Rename `ri-` CSS class prefix → `msn-` across app-shell template and stylesheet
+  4. Rename component selector `ri-app-shell` → `msn-app-shell` and update all references in templates and app.component.html
+
+### Guard Wiring
+
+- [X] T186 Wire Angular guards to actual services:
+  1. `angular/src/app/shared/guards/auth.guard.ts` — inject AuthService, check JWT token in localStorage/sessionStorage, redirect to `/onboarding/login` if absent/expired
+  2. `angular/src/app/shared/guards/kyc.guard.ts` — inject KycService or call GET /kyc/status, redirect to `/onboarding/kyc` if status ≠ Approved
+  3. Verify guards are applied on wallet, offerings, portfolio, subscription routes in routing module
+
+### Idempotency Infrastructure
+
+- [X] T187 Implement idempotency key middleware for financial endpoints (FR-013, Constitution §III):
+  1. Create `IdempotencyMiddleware` in `aspnet-core/src/MshNawy.HttpApi.Host/` — reads `X-Idempotency-Key` header, checks DB for existing key, returns cached response on duplicate
+  2. Create `IdempotencyRecord` entity (Key UUID, ResponseBody, StatusCode, CreatedAt, ExpiresAt 24h) in `aspnet-core/src/MshNawy.Domain/Shared/`
+  3. Register entity in DbContext, add migration
+  4. Apply middleware to all `POST`/`PUT` endpoints under `/api/app/wallet/`, `/api/app/deposits/`, `/api/app/withdrawals/`, `/api/app/orders/`
+  5. Unit test: duplicate key returns original response; expired key allows re-processing
+
+### Contract Cleanup
+
+- [X] T188 [P] Remove `refreshToken` field from MVP scope:
+  1. Remove `refreshToken` from `AuthResultDto` in `aspnet-core/src/MshNawy.Application.Contracts/Identity/AuthDtos.cs`
+  2. Remove from `VerifyOtpCommandHandler` response construction
+  3. Remove from `AuthResult` TypeScript interface in `angular/src/app/shared/models/identity.models.ts`
+  4. Remove from MSW identity handler response in `angular/src/app/mock/handlers/identity.handlers.ts`
+  5. Update `specs/001-realinvest-mvp/contracts/api-contracts.md` verify-otp response — remove `refreshToken` field, add note: "Refresh tokens deferred to post-MVP"
+
+**Checkpoint**: All constitution violations resolved, rename complete, guards functional, idempotency infrastructure ready for financial endpoints.
 
 ---
 
@@ -470,7 +526,7 @@
 - [ ] T164 Build admin fee policy management screen: view history, create new policy in angular/src/app/admin/fee-policy/
 - [ ] T165 Build admin dashboard: summary counts (pending KYC, pending deposits, pending withdrawals, pending orders, open tickets) in angular/src/app/admin/dashboard/
 - [ ] T166 Configure Angular lazy-loaded admin module with admin route guard in angular/src/app/admin/admin.module.ts and admin-routing.module.ts
-- [ ] T181 [P] Configure English locale for admin panel: add `en.json` ABP localization resource, configure admin Angular module to support both Arabic and English per FR-036 in angular/src/app/admin/ and aspnet-core/src/MshNawy.Domain.Shared/Localization/RealInvest/en.json
+- [ ] T181 [P] Configure English locale for admin panel: add `en.json` ABP localization resource, configure admin Angular module to support both Arabic and English per FR-036 in angular/src/app/admin/ and aspnet-core/src/MshNawy.Domain.Shared/Localization/MshNawy/en.json
 
 **Checkpoint**: Admin panel fully functional with all review screens, fee policy management, and audit logging.
 
@@ -481,8 +537,6 @@
 **Purpose**: E2E tests, performance, security hardening, final validation
 
 - [ ] T167 E2E test: complete critical path — register (OTP) → KYC submit → admin approve KYC → deposit → admin approve deposit → browse offerings → subscribe → admin settle order → view portfolio → vote to sell → admin initiate property sale → admin settle distribution in angular/e2e/critical-path.spec.ts
-- [ ] T168 Implement IFileStorageService abstraction in aspnet-core/src/MshNawy.Domain/Shared/IFileStorageService.cs with methods: `StoreFileAsync`, `GetFileStreamAsync`, `DeleteFileAsync`. Implement LocalFileStorageService in aspnet-core/src/MshNawy.EntityFrameworkCore/Infrastructure/FileStorage/LocalFileStorageService.cs — stores files outside wwwroot, served only via authenticated API endpoint (no public URL — constitution §Security MUST)
-- [ ] T168b Implement KYC image upload/retrieval API: `POST /api/app/kyc/upload` (stores file, returns opaque fileToken), `GET /api/app/kyc/image/{fileToken}` (validates JWT + file ownership, streams file) in aspnet-core/src/MshNawy.HttpApi/Identity/KycImageController.cs — ensures no KYC image is publicly accessible
 - [ ] T169 [P] Add FluentValidation validators for all DTOs (phone format, national ID 14 digits, file size 5MB, required fields) in aspnet-core/src/MshNawy.Application/Validators/
 - [ ] T170 [P] Configure Angular bundle budgets (≤250KB gzip) in angular/angular.json and verify with `ng build --configuration=production`
 - [ ] T171 [P] Add Angular loading, empty, and error states to all async operations across all feature modules (verify each page has all 3 states)
@@ -501,8 +555,9 @@
 - **Setup (Phase 1)**: No dependencies — start immediately
 - **Foundational (Phase 2)**: Depends on Phase 1 — BLOCKS all user stories
 - **US1 Onboarding (Phase 3)**: Depends on Phase 2 — MVP entry point
-- **US2 Deposits (Phase 4)**: Depends on Phase 2. Soft dependency on US1 (KYC guard)
-- **US3 Offerings (Phase 5)**: Depends on Phase 2. No dependency on US1/US2
+- **Remediation (Phase 3b)**: Depends on Phase 3 — BLOCKS Phase 4. Fixes constitution violations, rename remnants, guard wiring, idempotency middleware.
+- **US2 Deposits (Phase 4)**: Depends on Phase 3b. Soft dependency on US1 (KYC guard). Requires idempotency middleware (T187).
+- **US3 Offerings (Phase 5)**: Depends on Phase 3b. No dependency on US1/US2
 - **US4 Subscription (Phase 6)**: Depends on Phase 2. Requires US2 (balance) + US3 (offerings) entities to exist
 - **US5 Portfolio (Phase 7)**: Depends on Phase 2. Requires US4 (holdings created by order settlement)
 - **US6 Property Sale (Phase 8)**: Depends on Phase 2. Requires US4 (holdings exist from order settlement). Soft dependency on US5 (portfolio view).
@@ -519,7 +574,10 @@ Phase 1 (Setup)
     ↓
 Phase 2 (Foundational) ←── BLOCKS ALL
     ↓
-    ├── US1 (Onboarding) ──────────────────────────────────┐
+Phase 3 (US1 Onboarding) ✅
+    ↓
+Phase 3b (Remediation) ←── BLOCKS Phase 4+
+    ↓
     ├── US2 (Deposits) ───────────────────────────────┐    │
     ├── US3 (Offerings) ──────────────────────────┐   │    │
     │                                             │   │    │

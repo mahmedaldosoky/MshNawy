@@ -1,4 +1,4 @@
-.ri-app-shell{
+.msn-app-shell{
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -7,12 +7,12 @@
   border-bottom:1px solid #e6e6e6;
   direction:rtl;
 }
-.ri-brand{font-weight:700}
-.ri-nav{list-style:none;display:flex;gap:1rem;margin:0;padding:0}
-.ri-nav a{text-decoration:none;color:#222}
-.ri-actions a{margin-left:0.75rem;text-decoration:none}
-.ri-main{padding:1rem}
+.msn-brand{font-weight:700}
+.msn-nav{list-style:none;display:flex;gap:1rem;margin:0;padding:0}
+.msn-nav a{text-decoration:none;color:#222}
+.msn-actions a{margin-left:0.75rem;text-decoration:none}
+.msn-main{padding:1rem}
 
 @media (max-width:768px){
-  .ri-nav{display:none}
+  .msn-nav{display:none}
 }

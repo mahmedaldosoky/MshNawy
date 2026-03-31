@@ -1,8 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.Data;
 using Volo.Abp.EntityFrameworkCore;
+using Volo.Abp.Identity.EntityFrameworkCore;
+using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using MshNawy.Domain.Wallet;
 using MshNawy.Domain.Fees;
+using MshNawy.Domain.Identity;
+using MshNawy.Domain.Shared;
 
 namespace MshNawy.EntityFrameworkCore
 {
@@ -28,9 +32,23 @@ namespace MshNawy.EntityFrameworkCore
         /// </summary>
         public DbSet<FeePolicy> FeePolicies { get; set; }
 
+        /// <summary>
+        /// App user aggregate - OTP and KYC extension fields
+        /// </summary>
+        public DbSet<AppUser> AppUsers { get; set; }
+
+        /// <summary>
+        /// Idempotency records for financial endpoint deduplication
+        /// Per Constitution III: All financial operations must be idempotent
+        /// </summary>
+        public DbSet<IdempotencyRecord> IdempotencyRecords { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ConfigureIdentity();
+            modelBuilder.ConfigurePermissionManagement();
 
             // Configure LedgerEntry
             modelBuilder.Entity<LedgerEntry>(b =>
@@ -67,6 +85,53 @@ namespace MshNawy.EntityFrameworkCore
 
                 // Index for effective date lookups
                 b.HasIndex(x => x.EffectiveFrom).HasDatabaseName("IX_FeePolicy_EffectiveFrom");
+            });
+
+            // Configure AppUser
+            modelBuilder.Entity<AppUser>(b =>
+            {
+                b.HasKey(x => x.Id);
+
+                b.Property(x => x.IdentityUserId).IsRequired();
+                b.HasIndex(x => x.IdentityUserId).IsUnique();
+
+                b.Property(x => x.PhoneNumber).HasMaxLength(15).IsRequired();
+                b.HasIndex(x => x.PhoneNumber).IsUnique();
+
+                b.Property(x => x.KycStatus).HasConversion<int>().IsRequired();
+                b.Property(x => x.KycRejectionReason).HasMaxLength(500);
+                b.Property(x => x.KycSubmittedAt).HasColumnType("datetime2");
+
+                b.Property(x => x.FullNameArabic).HasMaxLength(200);
+                b.Property(x => x.DateOfBirth).HasColumnType("date");
+                b.Property(x => x.NationalIdNumber).HasMaxLength(14);
+                b.HasIndex(x => x.NationalIdNumber).IsUnique();
+
+                b.Property(x => x.NationalIdFrontImagePath).HasMaxLength(500);
+                b.Property(x => x.NationalIdBackImagePath).HasMaxLength(500);
+                b.Property(x => x.SelfiePath).HasMaxLength(500);
+
+                b.Property(x => x.OtpCodeHash).HasMaxLength(64);
+                b.Property(x => x.OtpExpiresAt).HasColumnType("datetime2");
+                b.Property(x => x.OtpWindowStart).HasColumnType("datetime2");
+                b.Property(x => x.OtpLockedUntil).HasColumnType("datetime2");
+            });
+
+            // Configure IdempotencyRecord
+            modelBuilder.Entity<IdempotencyRecord>(b =>
+            {
+                b.HasKey(x => x.Id);
+
+                b.HasIndex(x => x.IdempotencyKey).IsUnique()
+                    .HasDatabaseName("IX_IdempotencyRecord_Key");
+
+                b.Property(x => x.IdempotencyKey).HasColumnType("uniqueidentifier").IsRequired();
+                b.Property(x => x.ResponseBody).IsRequired();
+                b.Property(x => x.StatusCode).IsRequired();
+                b.Property(x => x.CreatedAt).HasColumnType("datetime2").IsRequired();
+                b.Property(x => x.ExpiresAt).HasColumnType("datetime2").IsRequired();
+
+                b.HasIndex(x => x.ExpiresAt).HasDatabaseName("IX_IdempotencyRecord_ExpiresAt");
             });
         }
     }

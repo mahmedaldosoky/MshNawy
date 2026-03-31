@@ -1,4 +1,5 @@
 using Volo.Abp.Modularity;
+using Volo.Abp.Identity;
 
 namespace MshNawy.Domain.Shared
 {
@@ -7,6 +8,7 @@ namespace MshNawy.Domain.Shared
     /// Per Constitution VII: Core module for shared domain concepts across layers.
     /// Per Constitution I: Arabic-only localization (configured in HttpApi.Host).
     /// </summary>
+    [DependsOn(typeof(AbpIdentityDomainSharedModule))]
     public class MshNawyDomainSharedModule : AbpModule
     {
         // Shared module - no special configuration needed at this layer

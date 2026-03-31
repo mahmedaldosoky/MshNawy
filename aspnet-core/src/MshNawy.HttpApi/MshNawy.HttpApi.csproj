@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../MshNawy.Application.Contracts/MshNawy.Application.Contracts.csproj" />
+    <ProjectReference Include="..\MshNawy.Domain\MshNawy.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

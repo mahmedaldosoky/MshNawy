@@ -1,10 +1,10 @@
 using System;
+using Volo.Abp.Domain.Entities;
 
 namespace MshNawy.Domain.Fees
 {
-    public class FeePolicy
+    public class FeePolicy : Entity<Guid>
     {
-        public Guid Id { get; private set; }
         public int Version { get; private set; }
         public DateTime EffectiveFrom { get; private set; }
         public DateTime? EffectiveTo { get; private set; }

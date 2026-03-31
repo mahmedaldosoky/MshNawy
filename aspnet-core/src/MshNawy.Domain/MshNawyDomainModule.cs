@@ -1,5 +1,10 @@
+using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Modularity;
+using Volo.Abp.Identity;
+using MshNawy.Domain.Fees;
+using MshNawy.Domain.Identity;
 using MshNawy.Domain.Shared;
+using MshNawy.Domain.Wallet;
 
 namespace MshNawy.Domain
 {
@@ -7,18 +12,17 @@ namespace MshNawy.Domain
     /// MshNawy Domain Module - registers domain entities, aggregates, and domain services.
     /// Per Constitution VII: Follows ABP module registration pattern and DDD principles.
     /// </summary>
-    [DependsOn(typeof(MshNawyDomainSharedModule))]
+    [DependsOn(typeof(MshNawyDomainSharedModule), typeof(AbpIdentityDomainModule))]
     public class MshNawyDomainModule : AbpModule
     {
         public override void ConfigureServices(ServiceConfigurationContext context)
         {
             base.ConfigureServices(context);
 
-            // Domain services are registered automatically as public services via attribute-based registration
-            // Or manually here if needed:
-            // context.Services.AddScoped<LedgerService>();
-            // context.Services.AddScoped<BalanceCalculator>();
-            // context.Services.AddScoped<FeeCalculator>();
+            context.Services.AddTransient<IOtpService, OtpService>();
+            context.Services.AddTransient<ILedgerService, LedgerService>();
+            context.Services.AddTransient<IBalanceCalculator, BalanceCalculator>();
+            context.Services.AddTransient<IFeeCalculator, FeeCalculator>();
         }
     }
 }

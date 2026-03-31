@@ -1,6 +1,6 @@
 # Implementation Plan: MshNawy (مش ناوي) — Egyptian Fractional Real Estate Investment Platform
 
-**Branch**: `001-realinvest-mvp` | **Date**: 2026-02-28 | **Updated**: 2026-03-08 | **Spec**: [spec.md](./spec.md)
+**Branch**: `001-realinvest-mvp` | **Date**: 2026-02-28 | **Updated**: 2026-03-13 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/specs/001-realinvest-mvp/spec.md`
 
 ## Summary
@@ -25,15 +25,17 @@ Build a full-stack web application for fractional real estate investing in the E
 
 | Principle | Status | Evidence |
 |-----------|--------|----------|
-| I. Arabic-Only & Egyptian Market | PASS | FR-020: Arabic-only RTL, EGP formatting, ar-EG locale. FR-001: Egyptian phone OTP. FR-002: National ID KYC gate. Localization via ABP resource files. |
+| I. Arabic-Only & Egyptian Market | **FAIL** — remediation in T184/T185 | FR-020: Arabic-only RTL, EGP formatting, ar-EG locale. FR-001: Egyptian phone OTP. FR-002: National ID KYC gate. **VIOLATION**: Hardcoded Arabic strings in Angular components (T184). "RealInvest" remnant in UI (T185). |
 | II. Financial Integrity — Double-Entry Ledger | PASS | FR-005: All movements via ledger entries. Immutable posted entries. Compensating entries for corrections. LedgerEntry entity with debit/credit accounts, piasters, idempotency keys. |
-| III. Atomic & Idempotent Financial Operations | PASS | FR-013: All financial ops atomic + idempotent with UUID keys. State machines for all financial entities (Deposit, Withdrawal, Order, Installment, Exit). Optimistic concurrency via ABP ConcurrencyStamp. |
+| III. Atomic & Idempotent Financial Operations | **PARTIAL** — remediation in T187 | FR-013: All financial ops atomic + idempotent with UUID keys. State machines for all financial entities. Optimistic concurrency via ABP ConcurrencyStamp. **GAP**: Idempotency key middleware not yet implemented (T187 added to Phase 3b). |
 | IV. Configurable Fee Policy | PASS | FR-014: DB-backed FeePolicy entity with entry/payment/exit fees. FR-023: Effective-date versioning. FR-015: Fee breakdowns before confirmation. No competing brand references in UI. |
 | V. Dynamic Financial Projections | PASS | FR-008/009/010: Projection engine with explicit inputs, 3 scenario modes. FR-022: Disclaimer required. No static ROI. Pure domain service (ProjectionEngine). |
 | VI. Frontend-First Delivery | PASS | FR-021: MSW mock layer with deterministic data. User Story 8 covers mock-first approach. Storybook for all shared components. Contract-first design. |
 | VII. Code Quality & ABP Compliance | PASS | Single ABP module with DDD folder structure. Domain methods for state transitions. DTOs for all API boundaries. FluentValidation. ABP permission system for admin. PR ≤ 400 LOC. |
 
-**Post-Phase 1 Re-check**: All principles remain satisfied. Data model preserves ledger immutability, entities use domain methods for state transitions, projection engine is a pure domain service, project structure follows ABP layering conventions.
+**Post-Phase 1 Re-check**: All principles remain satisfied at design level. Data model preserves ledger immutability, entities use domain methods for state transitions, projection engine is a pure domain service, project structure follows ABP layering conventions.
+
+**Post-Phase 3 Re-check (2026-03-13)**: Two implementation violations found. Principle I fails due to hardcoded Arabic strings in Angular components and RealInvest UI remnants. Principle III partially implemented — idempotency key column exists on LedgerEntry but no HTTP middleware to enforce it on financial endpoints. All violations tracked in Phase 3b remediation tasks (T184–T188). Constitution check will return to PASS after Phase 3b completion.
 
 **Analyze findings resolved (2026-03-08)**:
 - **C1 (CRITICAL)**: KYC presigned URL / secure image serving added — see Security Architecture below and tasks T168, T168b.
@@ -44,6 +46,28 @@ Build a full-stack web application for fractional real estate investing in the E
 - **I3 (MEDIUM)**: T118 split into T118a/T118b/T118c.
 - **U3 (MEDIUM)**: Withdrawal integration test task added (T183).
 - **U4 (MEDIUM)**: FR-030 (full upfront, no payment plan) test case added to T095 description.
+
+**Analyze findings resolved (2026-03-08 — second pass)**:
+- **I1 (CRITICAL)**: All `RealInvest:` error codes in api-contracts.md replaced with `MshNawy:NNNN` codes matching `MshNawyErrorCodes.cs`.
+- **I3 (HIGH)**: KYC upload flow in api-contracts.md updated to two-step secure upload: `POST /kyc/upload` → file token, then `POST /kyc/submit` with tokens. Removed inline multipart file upload from submit endpoint.
+- **U4 (HIGH)**: T168/T168b (IFileStorageService + KYC image API) moved from Phase 13 to Phase 3 as prerequisite for KYC upload.
+- **U1 (HIGH)**: T034 updated — AppUser uses composition (separate aggregate root referencing ABP IdentityUser.Id via FK), not inheritance. All fields explicitly listed.
+- **U2 (HIGH)**: T035 updated — OTP stored as SHA256 hash on AppUser entity, with expiration. Storage approach fully specified.
+- **U3 (MEDIUM)**: T037 updated — JWT generation strategy documented: uses ABP's ITokenService/SignInManager after OTP verification.
+- **C1 (HIGH)**: T000 marked done (source code rename complete). api-contracts.md error codes updated separately.
+- **C3 (MEDIUM)**: ar.json expanded with Arabic translations for all error codes in MshNawyErrorCodes.cs.
+- **C4 (MEDIUM)**: FluentValidation DI registration wired in MshNawyApplicationModule via `AddValidatorsFromAssembly`. Added `FluentValidation.DependencyInjectionExtensions` package.
+- **I4 (MEDIUM)**: IPA address in api-contracts.md changed from `realinvest@instapay` to `mshnawy@instapay`.
+
+**Analyze findings resolved (2026-03-13 — post-implementation Phase 0–3 analysis)**:
+- **C1 (CRITICAL)**: Hardcoded Arabic strings in Angular components (onboarding-login, onboarding-kyc, kyc-status, error-state) violate Constitution §I. New task T184 added to replace with ABP localization service calls.
+- **I1 (HIGH)**: "RealInvest" remnants in `angular/src/index.html` title and `app-shell.component.html` brand. New task T185 added to complete rename.
+- **C2 (HIGH)**: CSS classes use `ri-` prefix and component selector is `ri-app-shell` — inconsistent with MshNawy rename. Addressed in T185.
+- **U1 (MEDIUM)**: Auth and KYC guards are placeholder implementations not wired to actual services. New task T186 added to connect guards to AuthService/KycService.
+- **U2 (MEDIUM)**: T040 (EF Core KYC migration) was done but unchecked. Marked as `[X]`.
+- **C3 (MEDIUM)**: Idempotency key middleware not yet implemented despite FR-013. New task T187 added to Phase 2 (foundational) as prerequisite for Phase 4+ financial endpoints.
+- **U3/I2 (MEDIUM)**: Refresh token in api-contracts.md and AuthResultDto but semantics unspecified. Deferred to post-MVP — refresh token field removed from MVP scope; MVP uses short-lived JWT only. api-contracts.md to be updated.
+- **I3 (LOW)**: Default Arabic error message hardcoded in error-state component `@Input()`. Addressed in T184.
 
 ## Project Structure
 

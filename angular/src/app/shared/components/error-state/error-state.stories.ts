@@ -20,7 +20,7 @@ type Story = StoryObj<ErrorStateComponent>;
 
 export const Default: Story = {
   args: {
-    errorCode: 'RealInvest:0001',
+    errorCode: 'MshNawy:0001',
     errorMessage: 'حدث خطأ غير متوقع',
     showRetry: true
   }
@@ -28,7 +28,7 @@ export const Default: Story = {
 
 export const InsufficientBalance: Story = {
   args: {
-    errorCode: 'RealInvest:0300',
+    errorCode: 'MshNawy:0300',
     errorMessage: 'رصيد غير كافي',
     details: 'الرصيد المتاح ليس كافياً لإكمال هذه العملية',
     showRetry: false
@@ -37,7 +37,7 @@ export const InsufficientBalance: Story = {
 
 export const KycNotApproved: Story = {
   args: {
-    errorCode: 'RealInvest:0201',
+    errorCode: 'MshNawy:0201',
     errorMessage: 'لم يتم التحقق من الهوية بعد',
     details: 'يجب أن تكمل التحقق من الهوية أولاً قبل الاستثمار',
     showRetry: false
@@ -46,7 +46,7 @@ export const KycNotApproved: Story = {
 
 export const WithRetry: Story = {
   args: {
-    errorCode: 'RealInvest:0101',
+    errorCode: 'MshNawy:0101',
     errorMessage: 'فشل إرسال رمز التحقق',
     details: 'حاول مرة أخرى',
     retryLabel: 'إعادة المحاولة',
@@ -57,7 +57,7 @@ export const WithRetry: Story = {
 
 export const Mobile: Story = {
   args: {
-    errorCode: 'RealInvest:0002',
+    errorCode: 'MshNawy:0002',
     errorMessage: 'خطأ في المدخلات',
     details: 'تحقق من البيانات المدخلة',
     showRetry: true
@@ -71,7 +71,7 @@ export const Mobile: Story = {
 
 export const RTL: Story = {
   args: {
-    errorCode: 'RealInvest:0500',
+    errorCode: 'MshNawy:0500',
     errorMessage: 'فشلت عملية السحب',
     details: 'يرجى التواصل مع الدعم الفني'
   }

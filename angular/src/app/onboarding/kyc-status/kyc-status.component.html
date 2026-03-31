@@ -1,0 +1,11 @@
+<section class="status-card">
+  <h1>حالة التحقق</h1>
+
+  <div *ngIf="status" class="status-info">
+    <div class="badge">{{ status.status }}</div>
+    <p *ngIf="status.rejectionReason">السبب: {{ status.rejectionReason }}</p>
+    <p *ngIf="status.submittedAt">تاريخ الإرسال: {{ status.submittedAt | date: 'mediumDate' }}</p>
+  </div>
+
+  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+</section>

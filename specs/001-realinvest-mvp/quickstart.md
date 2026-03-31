@@ -1,233 +1,135 @@
 # Quickstart: MshNawy (مش ناوي) MVP
 
-**Branch**: `001-realinvest-mvp` | **Date**: 2026-02-28 | **Updated**: 2026-03-08
+**Branch**: `001-realinvest-mvp` | **Date**: 2026-02-28 | **Updated**: 2026-03-13
 
 ## Prerequisites
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| .NET SDK | Latest LTS (8.0+) | Backend runtime |
-| Node.js | Latest LTS (20+) | Frontend tooling |
-| Angular CLI | Latest LTS | Frontend framework |
-| ABP CLI | Latest | Project scaffolding, module management |
-| SQL Server or PostgreSQL | Latest stable | Database |
+| .NET SDK | LTS (8.0+) | Backend runtime |
+| Node.js | LTS (20+) | Frontend tooling |
+| Angular CLI | 18.x | Frontend framework |
+| SQL Server | Latest stable | Database (LocalDB or full instance) |
 | Git | 2.30+ | Version control |
 
-## Project Scaffolding
+> **Note**: ABP CLI and DbMigrator are not used in this project. Migrations are applied via `dotnet ef` against the `MshNawy.EntityFrameworkCore` project with `MshNawy.HttpApi.Host` as the startup project.
 
-### 1. Create ABP Solution
+## Project Structure (Actual)
 
-```bash
-abp new MshNawy -t app -u angular --database-provider ef -dbms SqlServer --mobile none
+### Backend (`aspnet-core/src/`)
+
+```text
+MshNawy.Domain.Shared/        — Enums, constants, error codes, localization
+MshNawy.Domain/                — Entities, domain services, interfaces
+├── Identity/                  — AppUser, IAppUserRepository, OtpService
+├── Wallet/                    — LedgerEntry, LedgerService, BalanceCalculator
+├── Fees/                      — FeePolicy, FeeCalculator
+└── Shared/                    — IFileStorageService, FileStorageOptions
+MshNawy.Application.Contracts/ — DTOs, service interfaces
+├── Identity/                  — KYC DTOs
+MshNawy.Application/           — Application services, AutoMapper, validators
+├── Identity/                  — KYC application service
+MshNawy.EntityFrameworkCore/   — DbContext, migrations, repositories
+├── Infrastructure/            — IFileStorageService implementations
+├── Repositories/              — Custom repositories
+├── Migrations/                — EF Core migrations
+MshNawy.HttpApi/               — API controllers
+├── Identity/                  — KYC/auth controllers
+MshNawy.HttpApi.Host/          — Host startup, configuration
 ```
 
-This generates the standard ABP layered structure:
-- `aspnet-core/src/MshNawy.Domain.Shared/` — Enums, constants, shared DTOs
-- `aspnet-core/src/MshNawy.Domain/` — Entities, aggregates, domain services, state machines
-- `aspnet-core/src/MshNawy.Application.Contracts/` — DTOs, application service interfaces
-- `aspnet-core/src/MshNawy.Application/` — Application services, AutoMapper profiles
-- `aspnet-core/src/MshNawy.EntityFrameworkCore/` — EF Core DbContext, migrations, repositories
-- `aspnet-core/src/MshNawy.HttpApi/` — API controllers
-- `aspnet-core/src/MshNawy.HttpApi.Host/` — Host startup, configuration
-- `aspnet-core/src/MshNawy.DbMigrator/` — Database migration runner
-- `angular/` — Angular frontend application
+### Backend Tests (`aspnet-core/test/`)
 
-### 2. Verify Scaffolding
-
-```bash
-cd aspnet-core
-dotnet build
-cd ../angular
-npm install
-ng serve
+```text
+MshNawy.Domain.Tests/
+├── Fees/                      — FeeCalculatorTests
+├── Identity/                  — Identity-related tests
+└── Wallet/                    — BalanceCalculatorTests, LedgerServiceTests
+MshNawy.Application.Tests/     — Integration tests
 ```
 
-### 3. Install Additional Dependencies
+### Frontend (`angular/src/app/`)
 
-**Backend** (NuGet):
-```bash
-# In aspnet-core/src/MshNawy.Application/
-dotnet add package FluentValidation.DependencyInjectionExtensions
+```text
+shared/
+├── components/                — Reusable UI components
+├── guards/                    — Auth/KYC guards
+├── models/                    — TypeScript interfaces (identity.models.ts)
+└── pipes/                     — Formatting pipes
+onboarding/
+├── login/                     — OTP login flow
+├── kyc/                       — KYC submission form
+└── kyc-status/                — KYC status display
+admin/
+└── kyc-review/                — Admin KYC review screen
+mock/
+├── browser.ts                 — MSW setup
+├── handlers/                  — MSW request handlers (base.ts, identity.handlers.ts)
+└── data/                      — Seed data (seed.ts)
 ```
 
-**Frontend** (npm):
-```bash
-cd angular
-npm install msw --save-dev          # Mock Service Worker for frontend-first development
-npm install @storybook/angular --save-dev  # Component catalog
-```
+### Tooling
 
-## Development Workflow
-
-### Frontend-First (Constitution Principle VI)
-
-1. **Define contracts** — Write DTOs in `Application.Contracts` first
-2. **Create MSW handlers** — Mock all API endpoints with deterministic data
-3. **Build Angular UI** — Develop against mocks, verify with Storybook
-4. **Write backend** — Implement application services matching the exact same contracts
-5. **Integrate** — Switch MSW off, point to real API
-
-### Running in Mock Mode
-
-```bash
-cd angular
-# MSW is configured to intercept in development mode
-ng serve  # Starts with mock API handlers active
-```
-
-### Running Full Stack
-
-```bash
-# Terminal 1: Backend
-cd aspnet-core/src/MshNawy.HttpApi.Host
-dotnet run
-
-# Terminal 2: Frontend
-cd angular
-ng serve --configuration=production  # Disables MSW, uses real API
+```text
+angular/.storybook/            — Storybook configuration (main.ts, preview.ts)
 ```
 
 ## Key Configuration
 
-### appsettings.json (Backend)
+### appsettings.json (Backend — `MshNawy.HttpApi.Host`)
 
 ```json
 {
+  "App": {
+    "SelfUrl": "http://localhost:5000"
+  },
   "ConnectionStrings": {
-    "Default": "Server=localhost;Database=MshNawy;Trusted_Connection=True;TrustServerCertificate=True"
+    "Default": "Server=localhost;Database=MshNawy;Trusted_Connection=true;TrustServerCertificate=true;"
   },
   "FileStorage": {
     "BasePath": "./uploads",
     "MaxFileSizeBytes": 5242880,
     "AllowedExtensions": [".jpg", ".jpeg", ".png"]
   },
-  "Otp": {
-    "ExpirationSeconds": 180,
-    "MaxAttemptsPerWindow": 5,
-    "WindowMinutes": 15,
-    "LockoutMinutes": 30,
-    "CodeLength": 6
+  "Jwt": {
+    "Issuer": "MshNawy",
+    "Audience": "MshNawy",
+    "SigningKey": "dev-signing-key-change-me",
+    "ExpiresInMinutes": 60
   }
 }
 ```
+
+**Ports** (from `launchSettings.json`):
+- HTTPS: `https://localhost:58155`
+- HTTP: `http://localhost:58156`
 
 ### environment.ts (Frontend)
 
 ```typescript
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:44300',
-  mockEnabled: true,  // Toggle MSW on/off
-  locale: 'ar-EG',
-  currency: 'EGP'
+  mockApiEnabled: true,   // Toggle MSW on/off
+  apiUrl: 'http://localhost:3000/api'
 };
 ```
 
-## Domain Structure (Folder Organization)
-
-```
-aspnet-core/src/MshNawy.Domain/
-├── Identity/
-│   ├── KycStatus.cs (enum - in Domain.Shared)
-│   └── OtpService.cs
-├── Wallet/
-│   ├── LedgerEntry.cs
-│   ├── LedgerEntryType.cs (enum - in Domain.Shared)
-│   ├── LedgerService.cs
-│   └── BalanceCalculator.cs
-├── Deposits/
-│   ├── Deposit.cs
-│   ├── DepositStatus.cs (enum - in Domain.Shared)
-│   └── DepositManager.cs
-├── Withdrawals/
-│   ├── Withdrawal.cs
-│   ├── WithdrawalStatus.cs (enum - in Domain.Shared)
-│   └── WithdrawalManager.cs
-├── Offerings/
-│   ├── Offering.cs
-│   ├── OfferingFinancialModel.cs
-│   ├── OfferingImage.cs
-│   ├── OfferingStatus.cs (enum - in Domain.Shared)
-│   └── ProjectionEngine.cs
-├── Orders/
-│   ├── InvestmentOrder.cs
-│   ├── OrderStatus.cs (enum - in Domain.Shared)
-│   ├── Installment.cs
-│   ├── InstallmentStatus.cs (enum - in Domain.Shared)
-│   ├── OrderManager.cs
-│   └── InstallmentProcessor.cs
-├── Portfolio/
-│   ├── Holding.cs
-│   └── StatementGenerator.cs
-├── Exits/
-│   ├── ExitRequest.cs
-│   ├── ExitStatus.cs (enum - in Domain.Shared)
-│   └── ExitManager.cs
-├── Fees/
-│   ├── FeePolicy.cs
-│   └── FeeCalculator.cs
-├── Support/
-│   ├── SupportTicket.cs
-│   ├── TicketMessage.cs
-│   ├── TicketAttachment.cs
-│   ├── TicketCategory.cs (enum - in Domain.Shared)
-│   └── TicketStatus.cs (enum - in Domain.Shared)
-├── Notifications/
-│   ├── Notification.cs
-│   ├── NotificationEventType.cs (enum - in Domain.Shared)
-│   └── NotificationService.cs
-└── Shared/
-    └── RiskLevel.cs (enum - in Domain.Shared)
-```
-
-## Angular Structure
-
-```
-angular/src/app/
-├── shared/
-│   ├── components/     # Reusable UI components (all with Storybook stories)
-│   ├── services/       # Shared services (auth, locale, notification)
-│   ├── guards/         # KYC guard, auth guard
-│   ├── pipes/          # EGP formatting, Arabic date, etc.
-│   └── models/         # TypeScript interfaces matching API DTOs
-├── onboarding/         # OTP login, KYC flow
-├── wallet/             # Balances, deposits, withdrawals, transactions
-├── offerings/          # Browse, detail, projections
-├── subscription/       # Knowledge check, order flow
-├── portfolio/          # Holdings, activity, statements
-├── exits/              # Exit request flow
-├── support/            # Ticket creation, thread view
-├── notifications/      # Notification center
-├── admin/              # Admin panel (lazy-loaded)
-│   ├── kyc-review/
-│   ├── deposit-review/
-│   ├── withdrawal-review/
-│   ├── order-settlement/
-│   ├── exit-processing/
-│   ├── support-management/
-│   ├── offering-management/
-│   └── fee-policy/
-└── mock/               # MSW handlers and seed data
-    ├── handlers/
-    ├── data/
-    └── browser.ts
-```
+> **Note**: When `mockApiEnabled` is `true`, MSW intercepts all API calls. Set to `false` and update `apiUrl` to point to the backend (e.g., `https://localhost:58155`) for real API mode.
 
 ## Run Commands
 
 ### First-Time Setup
 
 ```bash
-# 1. Run database migrations (creates MshNawy DB and seeds initial data)
-cd aspnet-core/src/MshNawy.DbMigrator
-dotnet run
-# Creates: MshNawy database, admin user, initial FeePolicy (entry 1%, payment 3%, exit 5%)
+# 1. Restore backend dependencies
+cd aspnet-core
+dotnet restore
 
-# 2. (Optional) Start the backend API
-cd aspnet-core/src/MshNawy.HttpApi.Host
-dotnet run
-# API server:  https://localhost:44300
-# Swagger UI:  https://localhost:44300/swagger
+# 2. Create/update the database via EF Core migrations
+cd aspnet-core
+dotnet ef database update \
+  --project src/MshNawy.EntityFrameworkCore \
+  --startup-project src/MshNawy.HttpApi.Host
 
 # 3. Install frontend dependencies
 cd angular
@@ -241,25 +143,30 @@ npx msw init public/ --save
 ### Daily Development
 
 ```bash
-# ── Mock mode (frontend only, no backend required) ──────────────
+# -- Mock mode (frontend only, no backend required) -------------------
 cd angular
 ng serve
 # Opens: http://localhost:4200
-# MSW intercepts all API calls with deterministic Arabic mock data
+# MSW intercepts all API calls with deterministic mock data
 
-# ── Full stack mode ─────────────────────────────────────────────
+# -- Full stack mode ---------------------------------------------------
 # Terminal 1 — Backend
 cd aspnet-core/src/MshNawy.HttpApi.Host
 dotnet run
+# HTTPS: https://localhost:58155
+# HTTP:  http://localhost:58156
+# Swagger: https://localhost:58155/swagger
 
 # Terminal 2 — Frontend (real API)
-# First: edit angular/src/environments/environment.ts → set mockEnabled: false
+# First: edit angular/src/environments/environment.ts
+#   → set mockApiEnabled: false
+#   → set apiUrl: 'https://localhost:58155'
 cd angular
 ng serve
 
-# ── Admin panel ─────────────────────────────────────────────────
-# Navigate to http://localhost:4200/admin after login with admin credentials
-# Admin credentials are seeded by MshNawy.DbMigrator
+# -- Admin panel -------------------------------------------------------
+# Navigate to http://localhost:4200/admin after login
+# Currently implements: KYC review
 ```
 
 ### Database
@@ -271,7 +178,7 @@ dotnet ef migrations add <MigrationName> \
   --project src/MshNawy.EntityFrameworkCore \
   --startup-project src/MshNawy.HttpApi.Host
 
-# Apply migrations directly (alternative to DbMigrator)
+# Apply migrations
 cd aspnet-core
 dotnet ef database update \
   --project src/MshNawy.EntityFrameworkCore \
@@ -282,50 +189,65 @@ cd aspnet-core
 dotnet ef database drop --force \
   --project src/MshNawy.EntityFrameworkCore \
   --startup-project src/MshNawy.HttpApi.Host
-dotnet run --project src/MshNawy.DbMigrator
+dotnet ef database update \
+  --project src/MshNawy.EntityFrameworkCore \
+  --startup-project src/MshNawy.HttpApi.Host
 ```
 
 ### Testing
 
 ```bash
-# ── Backend ─────────────────────────────────────────────────────
+# -- Backend -----------------------------------------------------------
 cd aspnet-core
-dotnet test                                           # all tests
-dotnet test --filter "Category=Unit"                  # unit tests only
-dotnet test --filter "Category=Integration"           # integration tests only
-dotnet test --collect:"XPlat Code Coverage"           # with coverage report
+dotnet test                                        # all tests
+dotnet test --filter "FullyQualifiedName~Domain"   # domain tests only
 
-# ── Frontend ────────────────────────────────────────────────────
+# -- Component catalog -------------------------------------------------
 cd angular
-ng test                                               # unit tests (Jest, watch mode)
-ng test --watch=false --code-coverage                 # single run with coverage
-
-# ── Component catalog ───────────────────────────────────────────
-cd angular
-npm run storybook                                     # http://localhost:6006
-
-# ── E2E (requires both backend + frontend running) ──────────────
-cd angular
-npx playwright test                                   # headless
-npx playwright test --headed                          # with browser UI
-npx playwright test --ui                              # Playwright interactive UI
+npm run storybook                                  # http://localhost:6006
 ```
+
+> **Not yet implemented**: Frontend unit tests (no test runner configured), E2E tests (no Playwright setup).
 
 ### Build & Quality Checks
 
 ```bash
-# Production build (enforces ≤250KB bundle budget)
+# Backend build
+cd aspnet-core
+dotnet build
+
+# Frontend build
 cd angular
 ng build --configuration=production
-
-# Lint checks
-cd angular
-ng lint                                               # ESLint (includes RTL/localization rules)
-cd aspnet-core
-dotnet build -warnaserror                             # zero-warning strict mode
-
-# Bundle size analysis
-cd angular
-ng build --configuration=production --stats-json
-npx webpack-bundle-analyzer dist/*/stats.json
 ```
+
+## Development Workflow
+
+### Frontend-First (Constitution Principle VI)
+
+1. **Define contracts** — Write DTOs in `Application.Contracts` first
+2. **Create MSW handlers** — Mock all API endpoints in `angular/src/app/mock/handlers/`
+3. **Build Angular UI** — Develop against mocks, verify with Storybook
+4. **Write backend** — Implement application services matching the contracts
+5. **Integrate** — Set `mockApiEnabled: false` in `environment.ts`, point to real API
+
+### Implementation Status
+
+What exists today:
+
+| Layer | Implemented | Planned |
+|-------|------------|---------|
+| **Domain** | Identity (AppUser, OTP), Wallet (Ledger, Balance), Fees (Policy, Calculator) | Deposits, Withdrawals, Offerings, Orders, Portfolio, PropertySales, Support, Notifications |
+| **Application** | Identity (KYC service) | All other services |
+| **HttpApi** | Identity controllers | All other controllers |
+| **EF Core** | DbContext, migrations (Initial + Fees + KYC), repositories, file storage | Remaining entity configurations |
+| **Angular** | Onboarding (login, KYC, KYC status), Admin (KYC review), shared components/guards/pipes, MSW setup | Wallet, Offerings, Subscription, Portfolio, PropertySales, Support, Notifications |
+| **Tests** | FeeCalculator, BalanceCalculator, LedgerService (domain tests) | Application integration tests, API tests, frontend tests, E2E |
+
+### Known Issues
+
+- `angular/package.json` name is still `"realinvest-angular"` (not yet renamed to `"mshn-nawy"`)
+- `angular/angular.json` project name is still `"realinvest-angular"`
+- No build budget configured in `angular.json` (target: 250KB gzip)
+- No frontend test runner configured (Jest or Karma)
+- No E2E test infrastructure (Playwright)

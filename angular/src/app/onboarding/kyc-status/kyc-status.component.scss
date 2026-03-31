@@ -1,0 +1,21 @@
+.status-card {
+  max-width: 420px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #f7f7ff;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(62, 57, 120, 0.12);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: #3c3f8e;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: #b42318;
+}

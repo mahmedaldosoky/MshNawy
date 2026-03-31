@@ -1,47 +1,41 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 2.0.0 (MAJOR — all principles redefined for domain-specific governance)
+Version change: 2.5.0 → 2.9.0 (MINOR — strengthened naming, file, and
+validation ownership rules in Principles VII and VIII)
 
 Modified principles:
-  - I. Code Quality → I. Arabic-Only & Egyptian Market (redefined)
-  - II. Testing Standards → II. Financial Integrity — Double-Entry Ledger (redefined)
-  - III. UX Consistency → III. Atomic & Idempotent Financial Operations (redefined)
-  - IV. Performance Requirements → IV. Configurable Fee Policy (redefined)
-  - V. ABP Framework Compliance → V. Dynamic Financial Projections (redefined)
+  - VII. Code Quality: strengthened "DTO naming" rule to explicitly forbid
+    `Input` suffix — all must end with `RequestDto`. Replaced "One DTO per
+    file" with "One class per file" — inline classes in controllers or other
+    files are forbidden.
+  - VIII. Interface-Based Dependencies: added domain service interface rule,
+    one-handler-per-file rule, 1:1 validator-per-handler rule (validators
+    own all input validation, handlers MUST NOT duplicate). Strengthened
+    DTO-is-the-request rule. Updated type location guide.
 
 Added sections:
-  - VI. Frontend-First Delivery Strategy (new principle)
-  - VII. Code Quality & ABP Compliance (consolidated from v1.0 principles I + V)
-  - Security & Audit Requirements (new section)
-  - Quality Gates (rewritten to include E2E onboarding flow, fee calc tests)
+  - None
 
 Removed sections:
-  - None (v1.0 content redistributed into new structure)
+  - None
 
 Templates reviewed:
-  - .specify/templates/plan-template.md       ✅ Compatible — Constitution Check
-                                                  must gate against principles I–VII
-  - .specify/templates/spec-template.md       ✅ Compatible — User stories must
-                                                  include Arabic-locale acceptance
-                                                  criteria and financial correctness
-  - .specify/templates/tasks-template.md      ✅ Compatible — test tasks REQUIRED
-                                                  per Principle VI and Quality Gates;
-                                                  Phase 2 must include ledger setup
-  - .specify/templates/agent-file-template.md ✅ Compatible — technology section
-                                                  aligns with stack constraints
+  - .specify/templates/plan-template.md       ✅ Compatible
+  - .specify/templates/spec-template.md       ✅ Compatible
+  - .specify/templates/tasks-template.md      ✅ Compatible
 
 Deferred TODOs:
   - None. All placeholders resolved.
 -->
 
-# RealInvest Constitution
+# MshNawy Constitution
 
 ## Core Principles
 
 ### I. Arabic-Only & Egyptian Market (NON-NEGOTIABLE)
 
-RealInvest is an Arabic-first product targeting Egyptian investors exclusively.
+MshNawy is an Arabic-first product targeting Egyptian investors exclusively.
 Every user-facing surface MUST comply with the following rules:
 
 - **Language**: The product UI MUST be Arabic-only. No English strings, labels,
@@ -72,7 +66,7 @@ confuse users and violate Egyptian fintech expectations.
 
 ### II. Financial Integrity — Double-Entry Ledger (NON-NEGOTIABLE)
 
-All monetary movements in RealInvest MUST be recorded via a double-entry ledger.
+All monetary movements in MshNawy MUST be recorded via a double-entry ledger.
 No balance may change without a corresponding ledger entry.
 
 - **Ledger-first rule**: Every operation that changes a user's balance, an escrow
@@ -126,7 +120,7 @@ or funds can be lost.
 
 ### IV. Configurable Fee Policy (NON-NEGOTIABLE)
 
-RealInvest fees MUST follow the business model and MUST be implemented as
+MshNawy fees MUST follow the business model and MUST be implemented as
 configurable policy rules — never as hard-coded constants.
 
 - **Current fee schedule** (source: Nawy Shares FAQ — keep reference in
@@ -187,7 +181,7 @@ inputs build trust and regulatory defensibility.
 
 ### VI. Frontend-First Delivery Strategy
 
-RealInvest follows a frontend-first development methodology. The UI is built
+MshNawy follows a frontend-first development methodology. The UI is built
 and validated before backend implementation begins.
 
 - **Build order**: For every feature:
@@ -229,10 +223,31 @@ architectural conventions.
   method. Domain events MUST be used for cross-aggregate side-effects.
 - **DTOs & mapping**: All data crossing the Application/HttpApi boundary MUST
   be a DTO. AutoMapper profiles MUST be defined in the Application layer.
-- **SOLID**: God classes and God services are forbidden. Single-responsibility
-  and dependency-inversion are mandatory.
+  Entity-to-DTO mapping MUST happen in query classes (see Principle VIII).
+- **DTO naming**: All DTOs MUST end with `RequestDto` (for inputs/commands)
+  or `ResponseDto` (for outputs/results). Examples: `KycSubmitRequestDto`,
+  `KycStatusResponseDto`, `KycUploadResponseDto`. Classes named with
+  `Input` suffix (e.g., `SendOtpInput`, `KycReviewDecisionInput`) are
+  forbidden — rename to `RequestDto`. This applies to ALL layers including
+  HttpApi-layer form DTOs (e.g., `KycUploadFormRequestDto`).
+- **One DTO per file**: Each file MUST contain at most one `RequestDto` or
+  one `ResponseDto`. The file MUST be named after the DTO it contains
+  (e.g., `SendOtpRequestDto.cs`, `send-otp-request.dto.ts`). The only
+  exception: a helper object (enum, nested type, or auxiliary interface)
+  that is used exclusively by that DTO may share the same file. If the
+  helper is referenced by any other type, it MUST be extracted to its own
+  file. Inline classes/interfaces inside controller files, app service
+  files, component files, or any other non-DTO file are forbidden — every
+  DTO MUST be in a dedicated file. This rule applies to both backend (C#)
+  and frontend (TypeScript) codebases.
 - **Naming**: Names MUST be self-documenting. No abbreviations except
   universally accepted acronyms (`Id`, `Dto`, `Api`, `Otp`, `Kyc`, `Egp`).
+- **Canonical type definitions**: Shared enums and union types (e.g.,
+  `KycStatus`, `KycReviewDecision`) MUST be defined once in
+  `angular/src/app/shared/models/` and imported everywhere they are needed.
+  Inline re-declaration of the same string-literal union in a component or
+  service is forbidden. If a type is used in more than one file it MUST live
+  in a shared models file.
 - **Dead code**: No commented-out code, unused imports, or orphaned files in
   the `main` branch.
 - **PR size**: A single PR MUST NOT change more than 400 lines of production
@@ -246,6 +261,254 @@ architectural conventions.
 
 **Rationale**: ABP provides tested infrastructure. Following its conventions
 prevents hidden complexity and ensures upgradability.
+
+### VIII. Interface-Based Dependencies, CQRS Layers, MediatR & Repository Pattern (NON-NEGOTIABLE)
+
+All cross-layer dependencies MUST go through interfaces — never concrete classes.
+All database query and persistence logic MUST live in repository implementations,
+not in application services or controllers. All entity-to-DTO mapping MUST live
+in query classes using AutoMapper — never manual mapping in app services.
+Application services MUST be thin coordinators that extract user context and
+delegate reads to query classes and writes to MediatR via `IMediator.Send()`.
+
+**Dependency Chain** (read path):
+
+```
+Controller → IAppService → AppService → IQuery → Query → IRepo → Repo
+```
+
+**Dependency Chain** (write path):
+
+```
+Controller → IAppService → AppService → IMediator → CommandHandler → IRepo → Repo
+```
+
+- **Controllers → App Service Interfaces**: HttpApi controllers MUST inject
+  application service interfaces (e.g., `IAuthAppService`, `IKycAppService`)
+  defined in `Application.Contracts`. Controllers MUST NOT reference concrete
+  `ApplicationService` classes or the `Application` project directly.
+- **App Services as thin coordinators**: Application services MUST be thin
+  wrappers that only extract user context (`CurrentUser.Id`, `Clock.Now`) and
+  delegate to query interfaces (reads) or `IMediator.Send()` (writes).
+  Application services MUST NOT contain business logic, domain operations,
+  DTO mapping, or direct repository calls.
+- **App Services → Query Interfaces (reads)**: For read operations that return
+  DTOs, application services MUST delegate to query interfaces (e.g.,
+  `IAppUserQuery`) defined in `Application.Contracts`. Query implementations
+  live in the `Application` project, call repository interfaces, and use
+  AutoMapper (`IObjectMapper`) for all entity-to-DTO mapping.
+- **App Services → MediatR (writes)**: For write/mutation operations,
+  application services MUST dispatch request DTOs via `IMediator.Send()`.
+  Request DTOs (e.g., `KycSubmitRequestDto`, `SendOtpRequestDto`) implement
+  `IRequest<TResult>` (or `IRequest` for void) and are defined in
+  `Application.Contracts`. There are NO separate command/record files —
+  the request DTO IS the MediatR request. Creating intermediate command
+  classes (`SendOtpCommand`, `VerifyOtpCommand`, etc.) that duplicate DTO
+  properties is forbidden. App services MUST forward the request DTO
+  directly: `return await mediator.Send(request);` — never construct a
+  separate object. Command handlers have NO interface — they implement
+  `IRequestHandler<TRequestDto, TResult>` from MediatR and live in the
+  `Application` project.
+- **One handler per file**: Each command handler MUST live in its own file
+  named after the handler class (e.g., `SendOtpCommandHandler.cs`,
+  `SubmitKycCommandHandler.cs`). A file MUST NOT contain more than one
+  handler class. This is a blocking defect in code review.
+- **One validator per handler (1:1)**: Every command handler MUST have a
+  corresponding FluentValidation validator class for its request DTO.
+  The validator file MUST be named `{RequestDto}Validator.cs` (e.g.,
+  `SendOtpRequestDtoValidator.cs`) and live in the same folder as its
+  handler. Validators handle all input validation (format checks, required
+  fields, range constraints). Command handlers MUST NOT duplicate
+  validation rules that belong in the validator. Validators are
+  auto-discovered via `AddValidatorsFromAssembly` in
+  `MshNawyApplicationModule`.
+- **Domain Services → Interfaces**: Every domain service class (e.g.,
+  `OtpService`, `LedgerService`, `BalanceCalculator`, `FeeCalculator`) MUST
+  have a corresponding interface (e.g., `IOtpService`, `ILedgerService`,
+  `IBalanceCalculator`, `IFeeCalculator`) defined in the same Domain project
+  folder. All consumers — command handlers, query classes, other domain
+  services — MUST inject the interface, never the concrete class. Domain
+  service interfaces are registered in `MshNawyDomainModule.ConfigureServices`
+  (e.g., `context.Services.AddTransient<IOtpService, OtpService>()`).
+- **Command Handlers → Repository Interfaces**: Command handler implementations
+  MUST inject custom repository interfaces (e.g., `IAppUserRepository`) defined
+  in the `Domain` project. Custom repository interfaces extend ABP's
+  `IRepository<TEntity, TKey>`. Concrete EF Core repository implementations
+  live in `EntityFrameworkCore/Repositories/`.
+- **Query Classes → Repository Interfaces**: Query implementations MUST call
+  repository interface methods to retrieve entities, then map to DTOs using
+  AutoMapper. Query classes MUST NOT contain business logic — only data
+  retrieval and mapping.
+- **AutoMapper profiles**: All entity-to-DTO mappings MUST be defined in
+  AutoMapper `Profile` classes in the `Application` project (e.g.,
+  `MshNawyApplicationAutoMapperProfile`). Manual DTO construction
+  (`new SomeDto { ... }`) from entity properties in app services is forbidden.
+  DTOs composed from multiple non-entity sources (e.g., JWT tokens,
+  computed values) are exempt from this rule and may be constructed manually
+  in command handlers.
+- **Command/Query handlers → Infrastructure Interfaces**: Infrastructure
+  abstractions (e.g., `IFileStorageService`, `IOtpSender`, `IJwtTokenService`)
+  MUST be defined in `Domain.Shared` or `Application.Contracts`.
+  Implementations live in `EntityFrameworkCore/Infrastructure/` or
+  `Application/`. Command handlers and query classes inject these directly.
+- **HttpApi project references**: The `HttpApi` project MUST reference only
+  `Application.Contracts` — never `Application` or `Domain` directly. All
+  types needed by controllers (DTOs, interfaces) MUST be defined in
+  `Application.Contracts`.
+- **DB logic in repositories only**: All Entity Framework queries, LINQ
+  expressions against `DbSet`, raw SQL, stored procedure calls, and any
+  database-specific logic MUST reside in repository implementations inside
+  the `EntityFrameworkCore` project. Command handlers, query classes, and
+  application services MUST NOT call `GetQueryableAsync()`, write LINQ-to-SQL
+  expressions, or use `AsyncExecuter` directly. Instead, domain-specific
+  query methods MUST be defined on the repository interface and implemented
+  in the EF Core repository class.
+- **No leaking EF abstractions**: Command handlers, query classes, and
+  application services MUST NOT depend on `IQueryable<T>`, `DbContext`,
+  `DbSet<T>`, or any EF Core type. If a query needs a filtered or paginated
+  result, the repository interface MUST expose a method with
+  domain-meaningful parameters.
+
+**Interface & Type Location Guide**:
+
+| Type | Defined In | Implemented In |
+|------|-----------|----------------|
+| `IAuthAppService` | Application.Contracts | Application |
+| `IKycAppService` | Application.Contracts | Application |
+| `IKycReviewAppService` | Application.Contracts | Application |
+| `IAppUserQuery` | Application.Contracts | Application |
+| `SendOtpRequestDto`, `VerifyOtpRequestDto` | Application.Contracts | — (IRequest DTOs) |
+| `KycSubmitRequestDto`, `KycUploadRequestDto` | Application.Contracts | — (IRequest DTOs) |
+| `MoveToUnderReviewRequestDto`, `ReviewKycRequestDto` | Application.Contracts | — (IRequest DTOs) |
+| `SendOtpCommandHandler`, etc. | — | Application (IRequestHandler) |
+| `IOtpService` | Domain | Domain |
+| `ILedgerService` | Domain | Domain |
+| `IBalanceCalculator` | Domain | Domain |
+| `IFeeCalculator` | Domain | Domain |
+| `IAppUserRepository` | Domain | EntityFrameworkCore |
+| `IFileStorageService` | Domain.Shared | EntityFrameworkCore/Infrastructure |
+| `IOtpSender` | Application | Application |
+| `IJwtTokenService` | Application | Application |
+
+**Registration**:
+- App service interfaces are auto-registered by ABP when the service class
+  implements the interface and extends `ApplicationService`.
+- MediatR is registered via `context.Services.AddMediatR(cfg =>
+  cfg.RegisterServicesFromAssembly(typeof(MshNawyApplicationModule).Assembly))`
+  in `MshNawyApplicationModule.ConfigureServices`. This auto-discovers all
+  `IRequestHandler<,>` implementations.
+- Command handlers also implement `ITransientDependency` for ABP DI compatibility.
+- Query classes are registered via `ITransientDependency` marker interface.
+- Domain services are registered manually in `MshNawyDomainModule.ConfigureServices`
+  via `context.Services.AddTransient<IService, Service>()`. Every domain service
+  MUST be registered against its interface — never as a concrete type alone.
+- Custom repository interfaces are registered via
+  `options.AddRepository<TEntity, TRepository>()` in the EF Core module.
+- Infrastructure services are registered manually in module `ConfigureServices`.
+
+**NuGet packages**:
+- `MediatR` (v12.4.1) in `Application.csproj`
+- `MediatR.Contracts` (v2.0.1) in `Application.Contracts.csproj`
+
+**Rationale**: Dependency inversion enables testability (mock any dependency),
+enforces separation of concerns, and prevents the application layer from being
+coupled to EF Core internals. MediatR decouples app services from command
+handler implementations — app services only know about command records (defined
+in Contracts), not handler classes. Keeping DB logic in repositories ensures
+that query changes don't require touching application services, and that all
+data access is centralized and optimizable.
+
+### IX. SOLID Principles (NON-NEGOTIABLE)
+
+All backend code MUST adhere to the five SOLID principles. Violations are
+blocking defects during code review.
+
+- **S — Single Responsibility Principle (SRP)**: Every class MUST have exactly
+  one reason to change. God classes and God services are forbidden.
+  - Application services MUST only coordinate (extract context, delegate).
+    They MUST NOT contain business logic, validation, mapping, AND
+    orchestration in the same class.
+  - Command handlers MUST handle exactly one command. A handler that processes
+    multiple unrelated commands MUST be split.
+  - Domain entities MUST encapsulate their own invariants but MUST NOT
+    perform infrastructure concerns (sending emails, file I/O, logging).
+  - Angular components MUST NOT exceed ~200 lines. If a component handles
+    form logic, API calls, AND complex rendering, extract services or child
+    components.
+  - **Test**: If describing what a class does requires "and" (e.g., "validates
+    input AND saves to DB AND sends notifications"), it violates SRP.
+
+- **O — Open/Closed Principle (OCP)**: Classes MUST be open for extension but
+  closed for modification.
+  - Fee calculation MUST use the `FeePolicy` entity pattern (Principle IV)
+    so that new fee types can be added without modifying `FeeCalculator`.
+  - State machine transitions MUST be defined declaratively (transition
+    tables or strategy objects), not via `if/else` chains that require
+    editing when new states are added.
+  - New MediatR command handlers extend the system without modifying
+    existing application services — this is OCP by design.
+  - Angular components MUST accept configuration via `@Input()` properties
+    rather than hard-coding behavior. Prefer composition over conditional
+    template branches.
+  - **Test**: Adding a new feature (fee type, state, command) MUST NOT
+    require modifying existing, tested classes.
+
+- **L — Liskov Substitution Principle (LSP)**: Subtypes MUST be substitutable
+  for their base types without altering program correctness.
+  - All ABP repository implementations (e.g., `EfCoreAppUserRepository`)
+    MUST honor the contract defined by their interface
+    (`IAppUserRepository`). Throwing `NotImplementedException` for inherited
+    methods is forbidden.
+  - Custom exceptions MUST extend `BusinessException` (ABP) and MUST NOT
+    change the exception-handling semantics (e.g., a subclass MUST NOT
+    silently swallow errors that the base class would propagate).
+  - When overriding ABP base class methods (e.g., `ApplicationService`,
+    `AuditedEntity`), the override MUST preserve base class postconditions
+    (e.g., audit fields MUST still be populated).
+  - **Test**: Swapping a concrete implementation for its interface in a
+    unit test MUST NOT cause test failures beyond the scope of the mock.
+
+- **I — Interface Segregation Principle (ISP)**: Clients MUST NOT be forced
+  to depend on interfaces they do not use.
+  - Application service interfaces MUST be scoped per feature/aggregate
+    (e.g., `IKycAppService`, `IAuthAppService`), not bundled into a single
+    `IUserService` covering KYC, auth, profile, and wallet.
+  - Repository interfaces MUST expose only the methods that their consumers
+    actually call. If only `GetByIdAsync` and `InsertAsync` are needed,
+    the custom interface MUST NOT expose `GetListAsync`, `UpdateAsync`,
+    `DeleteAsync` unless they are used.
+  - Query interfaces (e.g., `IAppUserQuery`) MUST be separate from command
+    dispatch — never combined into a single read-write interface.
+  - Infrastructure interfaces (e.g., `IFileStorageService`) MUST be
+    single-purpose. An interface that handles file upload AND email sending
+    MUST be split.
+  - **Test**: If a mock implementation must stub methods that the test
+    never calls, the interface is too wide.
+
+- **D — Dependency Inversion Principle (DIP)**: High-level modules MUST NOT
+  depend on low-level modules. Both MUST depend on abstractions.
+  - This is enforced structurally by Principle VIII: controllers depend on
+    `Application.Contracts` interfaces, application services depend on
+    query/repository interfaces, command handlers depend on repository
+    interfaces — never on concrete EF Core classes.
+  - The `HttpApi` project MUST NOT reference `Application` or
+    `EntityFrameworkCore`. The `Application` project MUST NOT reference
+    `EntityFrameworkCore`.
+  - Angular services MUST inject `HttpClient` (abstraction) — never
+    instantiate HTTP connections directly.
+  - All cross-layer wiring MUST go through ABP's dependency injection
+    container. Manual `new ConcreteClass()` for services is forbidden.
+  - **Test**: Every class with external dependencies MUST be unit-testable
+    by injecting mock implementations of its interface dependencies.
+
+**Rationale**: SOLID principles prevent the codebase from degrading into
+tightly coupled, untestable, and rigid structures as the product grows.
+They are especially critical in a financial application where correctness,
+auditability, and maintainability are non-negotiable. Each principle
+reinforces the others — SRP keeps classes focused, OCP prevents regression
+from new features, LSP ensures substitutability, ISP keeps interfaces
+lean, and DIP enforces the layered architecture mandated by ABP and
+Principle VIII.
 
 ## Technology Stack & Constraints
 
@@ -313,7 +576,7 @@ Every feature MUST pass these gates in order. A failure blocks progression.
    - **E2E tests** for the critical path: onboarding (OTP + KYC) →
      deposit → invest → portfolio view → exit request.
 6. **Code review gate**: All PRs require one approving review. Reviewers
-   MUST check constitution compliance (principles I–VII).
+   MUST check constitution compliance (principles I–IX).
 7. **CI gate**: Build + unit tests (≥ 80 % coverage on Domain +
    Application layers) + linting + Angular bundle budget (≤ 250 KB
    gzipped) + Lighthouse (score ≥ 80, LCP ≤ 2.5 s).
@@ -344,7 +607,7 @@ These are hard constraints enforced in CI:
 
 ## Governance
 
-This constitution is the highest-authority document governing RealInvest
+This constitution is the highest-authority document governing MshNawy
 development. It supersedes all team conventions, README guidance, and verbal
 agreements.
 
@@ -372,4 +635,4 @@ project owner, and tracked in the Complexity Tracking table of `plan.md`.
 
 ---
 
-**Version**: 2.0.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28
+**Version**: 2.9.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-03-26

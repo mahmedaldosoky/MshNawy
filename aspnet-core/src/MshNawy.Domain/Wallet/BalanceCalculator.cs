@@ -10,11 +10,11 @@ namespace MshNawy.Domain.Wallet
     /// Per Constitution II, balances are derived from the ledger at any point in time.
     /// Four balance types: Available, Reserved, Invested, PendingWithdrawal.
     /// </summary>
-    public class BalanceCalculator
+    public class BalanceCalculator : IBalanceCalculator
     {
-        private readonly LedgerService _ledgerService;
+        private readonly ILedgerService _ledgerService;
 
-        public BalanceCalculator(LedgerService ledgerService)
+        public BalanceCalculator(ILedgerService ledgerService)
         {
             _ledgerService = ledgerService ?? throw new ArgumentNullException(nameof(ledgerService));
         }

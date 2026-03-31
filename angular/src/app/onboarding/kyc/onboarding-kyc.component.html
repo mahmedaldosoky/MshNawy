@@ -1,0 +1,55 @@
+<section class="kyc-card">
+  <h1>التحقق من الهوية</h1>
+  <p>أكمل خطوات التحقق لتفعيل حسابك.</p>
+
+  <div class="steps">
+    <span [class.active]="currentStep === 1">1</span>
+    <span [class.active]="currentStep === 2">2</span>
+    <span [class.active]="currentStep === 3">3</span>
+  </div>
+
+  <div *ngIf="currentStep === 1" class="step">
+    <label>الاسم بالكامل بالعربية</label>
+    <input type="text" [formControl]="form.controls.fullNameArabic" />
+
+    <label>تاريخ الميلاد</label>
+    <input type="date" [formControl]="form.controls.dateOfBirth" />
+
+    <label>الرقم القومي</label>
+    <input type="text" maxlength="14" [formControl]="form.controls.nationalIdNumber" />
+  </div>
+
+  <div *ngIf="currentStep === 2" class="step">
+    <div class="upload">
+      <label>صورة البطاقة (الوجه الأمامي)</label>
+      <input type="file" (change)="uploadFile($event, 'NationalIdFront')" />
+      <span *ngIf="frontToken">تم الرفع</span>
+    </div>
+    <div class="upload">
+      <label>صورة البطاقة (الوجه الخلفي)</label>
+      <input type="file" (change)="uploadFile($event, 'NationalIdBack')" />
+      <span *ngIf="backToken">تم الرفع</span>
+    </div>
+    <div class="upload">
+      <label>صورة السيلفي</label>
+      <input type="file" (change)="uploadFile($event, 'Selfie')" />
+      <span *ngIf="selfieToken">تم الرفع</span>
+    </div>
+  </div>
+
+  <div *ngIf="currentStep === 3" class="step">
+    <h3>مراجعة وإرسال</h3>
+    <p>تأكد من رفع كل الصور المطلوبة قبل الإرسال.</p>
+  </div>
+
+  <div class="actions">
+    <button class="ghost" (click)="previousStep()" [disabled]="currentStep === 1">السابق</button>
+    <button class="primary" *ngIf="currentStep < 3" (click)="nextStep()">التالي</button>
+    <button class="primary" *ngIf="currentStep === 3" (click)="submitKyc()" [disabled]="isSubmitting">
+      {{ isSubmitting ? 'جارٍ الإرسال...' : 'إرسال الطلب' }}
+    </button>
+  </div>
+
+  <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+  <div class="success" *ngIf="successMessage">{{ successMessage }}</div>
+</section>

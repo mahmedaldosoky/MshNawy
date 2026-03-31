@@ -52,7 +52,7 @@ Response (200):
 ```json
 { "expiresInSeconds": 180, "attemptsRemaining": 4 }
 ```
-Errors: `RealInvest:PhoneLocked` (429), `RealInvest:InvalidPhoneFormat` (400)
+Errors: `MshNawy:0105` PhoneLocked (429), `MshNawy:0100` InvalidPhoneFormat (400)
 
 ### POST /api/app/auth/verify-otp `[Anonymous]`
 
@@ -62,9 +62,9 @@ Request:
 ```
 Response (200):
 ```json
-{ "accessToken": "jwt...", "refreshToken": "...", "userId": "guid", "kycStatus": "Draft" }
+{ "accessToken": "jwt...", "userId": "guid", "kycStatus": "Draft" }
 ```
-Errors: `RealInvest:InvalidOtp` (400), `RealInvest:OtpExpired` (400), `RealInvest:PhoneLocked` (429)
+Errors: `MshNawy:0102` InvalidOtp (400), `MshNawy:0103` OtpExpired (400), `MshNawy:0105` PhoneLocked (429)
 
 ---
 
@@ -81,22 +81,49 @@ Response (200):
 }
 ```
 
-### POST /api/app/kyc/submit
+### POST /api/app/kyc/upload `[Authenticated]`
+
+Uploads a single KYC file (national ID front, back, or selfie). Returns an opaque file token.
+Files are stored outside wwwroot and served only via authenticated endpoint (constitution §Security).
 
 Request (multipart/form-data):
 ```
-fullNameArabic: string
-dateOfBirth: date
-nationalIdNumber: string (14 digits)
-nationalIdFront: file (JPEG/PNG, max 5MB)
-nationalIdBack: file (JPEG/PNG, max 5MB)
-selfie: file (JPEG/PNG, max 5MB)
+file: file (JPEG/PNG, max 5MB)
+fileType: "NationalIdFront"|"NationalIdBack"|"Selfie"
+```
+Response (200):
+```json
+{ "fileToken": "opaque-token-string", "fileType": "NationalIdFront" }
+```
+Errors: `MshNawy:0206` KycImageUploadFailed (400), `MshNawy:0207` KycImageInvalid (400), `MshNawy:0008` FileTooLarge (400)
+
+### GET /api/app/kyc/image/{fileToken} `[Authenticated]`
+
+Streams the KYC image file. Validates JWT + file ownership. No permanent public URL.
+
+Response (200): Binary file stream (image/jpeg or image/png).
+Errors: `MshNawy:0006` NotFound (404), `MshNawy:0005` Forbidden (403)
+
+### POST /api/app/kyc/submit
+
+Submits KYC data with previously uploaded file tokens (from POST /api/app/kyc/upload).
+
+Request:
+```json
+{
+  "fullNameArabic": "string",
+  "dateOfBirth": "2000-01-15",
+  "nationalIdNumber": "12345678901234",
+  "nationalIdFrontToken": "opaque-token-string",
+  "nationalIdBackToken": "opaque-token-string",
+  "selfieToken": "opaque-token-string"
+}
 ```
 Response (200):
 ```json
 { "status": "Submitted", "submittedAt": "2026-02-28T10:00:00Z" }
 ```
-Errors: `RealInvest:KycAlreadyApproved` (400), `RealInvest:InvalidNationalId` (400), `RealInvest:FileTooLarge` (400)
+Errors: `MshNawy:0201` KycNotApproved — already approved (400), `MshNawy:0205` InvalidNationalId (400), `MshNawy:0008` FileTooLarge (400)
 
 ### Admin: GET /api/app/admin/kyc?status=Submitted&skipCount=0&maxResultCount=10
 
@@ -158,7 +185,7 @@ Response (200):
 {
   "method": "InstaPay",
   "accountDetails": {
-    "ipaAddress": "realinvest@instapay",
+    "ipaAddress": "mshnawy@instapay",
     "bankName": null,
     "accountNumber": null,
     "iban": null,
@@ -233,7 +260,7 @@ Response (201):
   "createdAt": "2026-02-28T10:00:00Z"
 }
 ```
-Errors: `RealInvest:InsufficientBalance` (400), `RealInvest:InsufficientBalanceForFee` (400)
+Errors: `MshNawy:0300` InsufficientBalance (400), `MshNawy:0504` InsufficientBalanceForFee (400)
 
 ### GET /api/app/withdrawals?skipCount=0&maxResultCount=10
 
@@ -398,7 +425,7 @@ Response (201):
   ]
 }
 ```
-Errors: `RealInvest:InsufficientBalance` (400), `RealInvest:OfferingClosed` (400), `RealInvest:InsufficientShares` (400), `RealInvest:KnowledgeCheckRequired` (400)
+Errors: `MshNawy:0300` InsufficientBalance (400), `MshNawy:0602` OfferingClosed (400), `MshNawy:0603` InsufficientShares (400), `MshNawy:0707` KnowledgeCheckRequired (400)
 
 ### GET /api/app/orders?skipCount=0&maxResultCount=10
 
@@ -491,7 +518,7 @@ Response (200):
   "thresholdReached": true
 }
 ```
-Errors: `RealInvest:NotAHolder` (403), `RealInvest:SaleAlreadyInitiated` (400)
+Errors: `MshNawy:0906` NotAHolder (403), `MshNawy:0901` SaleAlreadyInitiated (400)
 
 ### DELETE /api/app/offerings/{offeringId}/sale-vote
 
@@ -522,7 +549,7 @@ Response (200):
   "initiatedAt": "2026-02-28T10:00:00Z"
 }
 ```
-Errors: `RealInvest:NoActiveSale` (404)
+Errors: `MshNawy:0900` NoActiveSale (404)
 
 ### Admin: POST /api/app/admin/property-sales/initiate
 
@@ -663,23 +690,27 @@ Request:
 
 ## Error Codes
 
+All error codes use the `MshNawy:NNNN` format matching constants in `MshNawyErrorCodes.cs`.
+
 | Code | HTTP | Description |
 |------|------|-------------|
-| RealInvest:InvalidPhoneFormat | 400 | Phone number not +20XXXXXXXXXX format |
-| RealInvest:PhoneLocked | 429 | OTP rate limit exceeded |
-| RealInvest:InvalidOtp | 400 | Wrong OTP code |
-| RealInvest:OtpExpired | 400 | OTP expired (>3 min) |
-| RealInvest:KycAlreadyApproved | 400 | KYC already approved |
-| RealInvest:KycRequired | 403 | Operation requires approved KYC |
-| RealInvest:InvalidNationalId | 400 | National ID not 14 digits |
-| RealInvest:FileTooLarge | 400 | File exceeds 5 MB |
-| RealInvest:InsufficientBalance | 400 | Not enough available balance |
-| RealInvest:InsufficientBalanceForFee | 400 | Balance doesn't cover amount + fee |
-| RealInvest:OfferingClosed | 400 | Offering not open for investment |
-| RealInvest:InsufficientShares | 400 | Not enough available shares |
-| RealInvest:KnowledgeCheckRequired | 400 | Must complete knowledge check first |
-| RealInvest:DuplicateRequest | 409 | Idempotency key already processed |
-| RealInvest:InvalidStateTransition | 400 | Entity not in valid state for operation |
-| RealInvest:NotAHolder | 403 | User has no shares in this offering |
-| RealInvest:SaleAlreadyInitiated | 400 | Property sale already in progress |
-| RealInvest:NoActiveSale | 404 | No active property sale for this offering |
+| MshNawy:0100 | 400 | InvalidPhoneFormat — Phone number not +20XXXXXXXXXX format |
+| MshNawy:0105 | 429 | OtpPhoneLockedOut — OTP rate limit exceeded (5 attempts/15min, 30min lockout) |
+| MshNawy:0102 | 400 | OtpInvalid — Wrong OTP code |
+| MshNawy:0103 | 400 | OtpExpired — OTP expired (>3 min) |
+| MshNawy:0104 | 429 | OtpRateLimited — Too many OTP requests |
+| MshNawy:0201 | 400 | KycNotApproved — KYC already approved, cannot resubmit |
+| MshNawy:0202 | 403 | KycPending — Operation requires approved KYC |
+| MshNawy:0205 | 400 | KycInvalidNationalId — National ID not 14 digits |
+| MshNawy:0206 | 400 | KycImageUploadFailed — File upload failed |
+| MshNawy:0207 | 400 | KycImageInvalid — Invalid image format (must be JPEG/PNG, max 5MB) |
+| MshNawy:0300 | 400 | InsufficientBalance — Not enough available balance |
+| MshNawy:0504 | 400 | WithdrawalInsufficientForFee — Balance doesn't cover amount + fee |
+| MshNawy:0602 | 400 | OfferingClosed — Offering not open for investment |
+| MshNawy:0603 | 400 | OfferingNoSharesAvailable — Not enough available shares |
+| MshNawy:0707 | 400 | KnowledgeCheckRequired — Must complete knowledge check first |
+| MshNawy:0008 | 409 | ConcurrencyFailed — Idempotency key already processed |
+| MshNawy:0701 | 400 | OrderInvalidState — Entity not in valid state for operation |
+| MshNawy:0906 | 403 | HoldingNotFound — User has no shares in this offering |
+| MshNawy:0901 | 400 | PropertySaleAlreadyInitiated — Property sale already in progress |
+| MshNawy:0900 | 404 | PropertySaleNotFound — No active property sale for this offering |
