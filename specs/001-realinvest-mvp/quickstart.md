@@ -101,8 +101,8 @@ angular/.storybook/            — Storybook configuration (main.ts, preview.ts)
 ```
 
 **Ports** (from `launchSettings.json`):
-- HTTPS: `https://localhost:58155`
-- HTTP: `http://localhost:58156`
+- HTTPS: `https://localhost:44300`
+- HTTP: `http://localhost:44301`
 
 ### environment.ts (Frontend)
 
@@ -114,7 +114,7 @@ export const environment = {
 };
 ```
 
-> **Note**: When `mockApiEnabled` is `true`, MSW intercepts all API calls. Set to `false` and update `apiUrl` to point to the backend (e.g., `https://localhost:58155`) for real API mode.
+> **Note**: When `mockApiEnabled` is `true`, MSW intercepts all API calls. Set to `false` and update `apiUrl` to point to the backend (e.g., `https://localhost:44300`) for real API mode.
 
 ## Run Commands
 
@@ -153,14 +153,14 @@ ng serve
 # Terminal 1 — Backend
 cd aspnet-core/src/MshNawy.HttpApi.Host
 dotnet run
-# HTTPS: https://localhost:58155
-# HTTP:  http://localhost:58156
-# Swagger: https://localhost:58155/swagger
+# HTTPS: https://localhost:44300
+# HTTP:  http://localhost:44301
+# Swagger: https://localhost:44300/swagger
 
 # Terminal 2 — Frontend (real API)
 # First: edit angular/src/environments/environment.ts
 #   → set mockApiEnabled: false
-#   → set apiUrl: 'https://localhost:58155'
+#   → set apiUrl: 'https://localhost:44300'
 cd angular
 ng serve
 

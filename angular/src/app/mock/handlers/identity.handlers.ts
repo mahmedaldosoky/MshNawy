@@ -61,7 +61,7 @@ export const identityHandlers = [
   }),
 
   rest.post('/api/app/kyc/upload', async (req, res, ctx) => {
-    const formData = await req.formData();
+    const formData = await (req as any).formData();
     const fileType = String(formData.get('fileType') ?? 'Unknown');
     if (!fileType || fileType === 'Unknown') {
       return res(

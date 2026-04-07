@@ -27,5 +27,8 @@
       }
     }
   },
-  "defaultProject": "realinvest-angular"
+  "defaultProject": "realinvest-angular",
+  "cli": {
+    "analytics": false
+  }
 }
